@@ -4,6 +4,9 @@ Created on Oct 1, 2011
 @author: djweiss
 '''
 
+from antpathsearch import aStarSearch
+from worldstate import AIM
+
 class FeatureExtractor:
     ''' Extracts features from ant world state for given actions.
     
@@ -84,6 +87,9 @@ class MovingTowardsFeatures(FeatureExtractor):
         self.feature_names.append("Moving Towards Closest Enemy")
         self.feature_names.append("Moving Towards Closest Food")
         self.feature_names.append("Moving Towards Friendly")
+        self.feature_names.append("Moving Towards Closest Food on AStar path")
+        #self.feature_names.append("Moving Towards Closest Enemy on AStar path")
+        self.feature_names.append("Moving Towards Least Visited")
 
     def __init__(self):
         FeatureExtractor.__init__(self, {'_type': MovingTowardsFeatures.type_name})    
@@ -92,6 +98,30 @@ class MovingTowardsFeatures(FeatureExtractor):
         """Returns true if loc2 is closer to target than loc1 in manhattan distance."""
         
         return world.manhattan_distance(loc1, target) - world.manhattan_distance(loc2, target) > 0
+
+    def moving_towards_on_astar(self, world, loc, new_loc, path_dict, target, state):
+        """ Returns true, if the new_loc is the next step to go towards the target on an aStar Path. """
+        if len(path_dict[loc]) != 0:
+            # Is the path a path to the target and if so: does the action move the ant closer to it?
+            return path_dict[loc][0] == new_loc and path_dict[loc][-1] == target
+        else:
+            # Check if we allow more a* searches. 60 should be doable without timeout.
+            if state.a_star_counter <= 60:
+                state.a_star_counter += 1
+                # Generate an a*-path
+                pathfinder = aStarSearch(world)
+                path = pathfinder.get_path(loc,target)
+                if path is not None:
+                    # Remove the first entry of the path, because it's just the start again
+                    path_dict[loc] = path[1:]
+                    return path_dict[loc][0] == new_loc
+                else:
+                    # Food not near enough for this ant
+                    return False
+            else:
+                # Fall back to greedy approximation
+                #return self.moving_towards(world, loc, new_loc, target)
+                return False
 
     def find_closest(self, world, loc, points):
         """Returns the closest point to loc from the list points, or None if points is empty."""
@@ -116,7 +146,7 @@ class MovingTowardsFeatures(FeatureExtractor):
         world.L.debug("loc: %s, food_loc: %s, enemy_loc: %s, friendly_loc: %s" % (str(loc), str(food_loc), str(enemy_loc), str(friend_loc)))
         # Feature vector        
         f = list()
-        
+
         # Moving towards enemy
         if enemy_loc is None:
             f.append(False)
@@ -129,12 +159,38 @@ class MovingTowardsFeatures(FeatureExtractor):
         else:
             f.append(self.moving_towards(world, loc, next_loc, food_loc));
         
+
         # Moving towards friendly
         if friend_loc is None:
             f.append(False)
         else:
             f.append(self.moving_towards(world, loc, next_loc, friend_loc));
         
+        # Moving on aStar-path towards food
+        if food_loc is None:
+            f.append(False)
+        else:
+            f.append(self.moving_towards_on_astar(world, loc, next_loc, state.paths, food_loc, state))
+
+        # Moving on aStar-path towards an enemy
+        # This is a stupid feature.
+        #if enemy_loc is None:
+        #    f.append(False)
+        #else:
+        #    f.append(self.moving_towards_on_astar(world, loc, next_loc, state.paths, enemy_loc, state))
+
+        # Moving towards least visited, is true, if direction leads to a square, that is the least
+        # visited of the all possible squares around the ant.
+        other_dirs = AIM.keys()
+        other_dirs.remove(action)
+        if 'halt' in other_dirs:
+            other_dirs.remove('halt')
+        least_visited = True
+        for direction in other_dirs:
+            if state.get_next_visited(loc, action) > state.get_next_visited(loc, direction):
+                least_visited = False
+        f.append(least_visited)
+
         return f
     
 class QualifyingFeatures(FeatureExtractor):
@@ -143,18 +199,97 @@ class QualifyingFeatures(FeatureExtractor):
     This is part of the assignment for HW3. Your features in this class don't have to depend on
     the action, but instead can be functions of state or location, e.g., "1 ant left".
     
+    Implemented qualifying features:
+    - Enemy nearby: Is true, if there is an enemy nearby
+    - Friend nearby: True if there is a friendly ant nearby
     """
     
-    type_name = 'Qualifying'    
+    type_name = 'Qualifying'
+    # The radius that is used to qualify as "nearby"
+    nearby_distance = 5
     
     def __init__(self):
-        pass
+        FeatureExtractor.__init__(self, {'_type': QualifyingFeatures.type_name})
         
     def init_from_dict(self, input_dict):
-        raise NotImplementedError
-    
+        self.feature_names.append("Enemy Nearby")
+        self.feature_names.append("Friend Nearby")
+        self.feature_names.append("Friend close")
+        self.feature_names.append("More than 100 ants")
+        self.feature_names.append("Enemy is nearer to nearest food")
+        self.feature_names.append("No food in Hill")
+        self.feature_names.append(">=1 food in Hill")
+        self.feature_names.append(">=2 food in Hill")
+        self.feature_names.append(">=3 food in Hill")
+        self.feature_names.append(">=4 food in Hill")
+        self.feature_names.append(">=5 food in Hill")
+        self.feature_names.append(">=7 food in Hill")
+        self.feature_names.append(">=8 food in Hill")
+        self.feature_names.append(">=9 food in Hill")
+        self.feature_names.append(">=10 food in Hill")
+        self.feature_names.append("No ant defending")
+        self.feature_names.append(">=1 ant defending")
+        self.feature_names.append(">=2 ant defending")
+        self.feature_names.append(">=3 ant defending")
+        self.feature_names.append(">=4 ant defending")
+        self.feature_names.append(">=5 ant defending")
+
+    def find_closest(self, world, loc, points):
+        """Returns the closest point to loc from the list points, or None if points is empty."""
+        if len(points) == 1:
+            return points[0]
+        
+        locs = world.sort_by_distance(loc, points)
+            
+        if len(locs) > 0:
+            return locs[0][1]
+        else:
+            return None
+
+    def moving_towards(self, world, loc1, loc2, target):
+        """Returns true if loc2 is closer to target than loc1 in manhattan distance."""
+        
+        return world.manhattan_distance(loc1, target) - world.manhattan_distance(loc2, target) > 0
+
+    def nearby(self, world, antpos, target):
+        """ Returns True, if the manhattan distance between antpos and target
+        is smaller or equal than nearby_distance. """
+        return world.manhattan_distance(antpos, target) <= QualifyingFeatures.nearby_distance
+
     def extract(self, world, state, loc, action):
-        raise NotImplementedError
+        """ Extract the qualifying features. """
+        enemy_loc = self.find_closest(world, loc, state.lookup_nearby_enemy(loc))
+        friend_loc = self.find_closest(world, loc, state.lookup_nearby_friendly(loc))
+        food_loc = self.find_closest(world, loc, state.lookup_nearby_food(loc))
+        
+        f = []
+        # Enemy nearby
+        if enemy_loc is None:
+            f.append(False)
+        else:
+            f.append(self.nearby(world, loc, enemy_loc))
+        # Friend nearby
+        if friend_loc is None:
+            f.append(False)
+        else:
+            f.append(self.nearby(world, loc, friend_loc))
+        # Friend close
+        if friend_loc is None:
+            f.append(False)
+        else:
+            f.append(world.manhattan_distance(loc, friend_loc) <= 2)
+        # more than 100 ants
+        if len(world.ants) > 100:
+            f.append(True)
+        else:
+            f.append(False)
+        # Enemy is nearer to the nearest food:
+        if enemy_loc is None or food_loc is None:
+            f.append(False)
+        else:
+            f.append(self.moving_towards(world, loc, enemy_loc, food_loc))
+
+        return f
 
 class CompositingFeatures(FeatureExtractor):
     """Generates new features from new existing FeatureExtractors.
@@ -199,12 +334,19 @@ class CompositingFeatures(FeatureExtractor):
                 
         """
         self.feature_names.extend(self.base_f.feature_names)
-        
-        raise NotImplementedError
+        for base_id in range(self.base_f.num_features()):
+            for qual_id in range(self.qual_f.num_features()):
+                self.feature_names.append(self.base_f.feature_name(base_id) + " AND " +\
+                        self.qual_f.feature_name(qual_id))
     
     def extract(self, world, state, loc, action):
         """Extracts the combination of features according to the ordering defined by compute_feature_names()."""
-        raise NotImplementedError
-
-
-                       
+        f = []
+        # First get the base features
+        f.extend(self.base_f.extract(world, state, loc, action))
+        # Now multiply every base feature with every qualifying feature
+        # This is done in the same order as the names are generated.
+        f.extend([i*j for i in self.base_f.extract(world, state, loc, action)\
+            for j in self.qual_f.extract(world, state, loc, action)])
+        # Return the feature vector
+        return f
