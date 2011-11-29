@@ -6,7 +6,7 @@ Created on Oct 1, 2011
 import math
 import worldstate
 
-from collection import defaultdict
+from collections import defaultdict
 
 class GridLookup:     
     """ Datastructure that, once created, allows the lookup of nearby points to query point in constant time.
