@@ -7,6 +7,8 @@ Created on Oct 1, 2011
 from antpathsearch import aStarSearch
 from worldstate import AIM
 
+from collections import defaultdict
+
 class FeatureExtractor:
     ''' Extracts features from ant world state for given actions.
     
@@ -90,6 +92,8 @@ class MovingTowardsFeatures(FeatureExtractor):
         self.feature_names.append("Moving Towards Closest Food on AStar path")
         #self.feature_names.append("Moving Towards Closest Enemy on AStar path")
         self.feature_names.append("Moving Towards Least Visited")
+        self.feature_names.append("Moving Towards Closest own hill")
+        self.feature_names.append("Moving Towards Closest enemy hill")
 
     def __init__(self):
         FeatureExtractor.__init__(self, {'_type': MovingTowardsFeatures.type_name})    
@@ -142,6 +146,10 @@ class MovingTowardsFeatures(FeatureExtractor):
         enemy_loc = self.find_closest(world, loc, state.lookup_nearby_enemy(loc))
         friend_loc = self.find_closest(world, loc, state.lookup_nearby_friendly(loc))
 
+        # get closest hills
+        own_hill_loc = self.find_closest(world, loc, state.own_hills)
+        enemy_hill_loc = self.find_closest(world, loc, world.enemy_hills)
+
         next_loc = world.next_position(loc, action)
         world.L.debug("loc: %s, food_loc: %s, enemy_loc: %s, friendly_loc: %s" % (str(loc), str(food_loc), str(enemy_loc), str(friend_loc)))
         # Feature vector        
@@ -190,6 +198,19 @@ class MovingTowardsFeatures(FeatureExtractor):
             if state.get_next_visited(loc, action) > state.get_next_visited(loc, direction):
                 least_visited = False
         f.append(least_visited)
+        
+        # Moving towards closest own hill
+        if own_hill_loc is None:
+            f.append(False)
+        else:
+            f.append(self.moving_towards_on_astar(world, loc, next_loc, state.paths, food_loc, state))
+
+        # Moving towards closest enemy hill
+        if enemy_hill_loc is None:
+            f.append(False)
+        else:
+            f.append(self.moving_towards_on_astar(world, loc, next_loc, state.paths, food_loc, state))
+
 
         return f
     
@@ -218,21 +239,22 @@ class QualifyingFeatures(FeatureExtractor):
         self.feature_names.append("More than 100 ants")
         self.feature_names.append("Enemy is nearer to nearest food")
         self.feature_names.append("No food in Hill")
-        self.feature_names.append(">=1 food in Hill")
-        self.feature_names.append(">=2 food in Hill")
-        self.feature_names.append(">=3 food in Hill")
-        self.feature_names.append(">=4 food in Hill")
-        self.feature_names.append(">=5 food in Hill")
-        self.feature_names.append(">=7 food in Hill")
-        self.feature_names.append(">=8 food in Hill")
-        self.feature_names.append(">=9 food in Hill")
+        self.feature_names.append("1 food in Hill")
+        self.feature_names.append("2 food in Hill")
+        self.feature_names.append("3 food in Hill")
+        self.feature_names.append("4 food in Hill")
+        self.feature_names.append("5 food in Hill")
+        self.feature_names.append("6 food in Hill")
+        self.feature_names.append("7 food in Hill")
+        self.feature_names.append("8 food in Hill")
+        self.feature_names.append("9 food in Hill")
         self.feature_names.append(">=10 food in Hill")
         self.feature_names.append("No ant defending")
-        self.feature_names.append(">=1 ant defending")
-        self.feature_names.append(">=2 ant defending")
-        self.feature_names.append(">=3 ant defending")
-        self.feature_names.append(">=4 ant defending")
-        self.feature_names.append(">=5 ant defending")
+        self.feature_names.append("1 ant defending")
+        self.feature_names.append("2 ants defending")
+        self.feature_names.append("3 ants defending")
+        self.feature_names.append("4 ants defending")
+        self.feature_names.append(">=5 ants defending")
 
     def find_closest(self, world, loc, points):
         """Returns the closest point to loc from the list points, or None if points is empty."""
@@ -288,6 +310,107 @@ class QualifyingFeatures(FeatureExtractor):
             f.append(False)
         else:
             f.append(self.moving_towards(world, loc, enemy_loc, food_loc))
+
+        # Hill defending features
+        # Using any hill. Can unfortunately not be changed, as the amount of hills can vary
+        # with every game, but we need a constant set of features.
+        hill_defenders = defaultdict(set)
+        for ant in world.ants:
+            for hill in world.my_hills():
+                if nearby(world, ant.location, hill):
+                    hill_defenders[hill].add(ant.ant_id)
+        defender_counts = set([len(defenders) for defenders in hill_defenders.items()])
+
+        # No food in Hill
+        if state.food_storage == 0:
+            f.append(True)
+        else:
+            f.append(False)
+        # 1 food in Hill
+        if state.food_storage == 1:
+            f.append(True)
+        else:
+            f.append(False)
+        # 2 food in Hill
+        if state.food_storage == 2:
+            f.append(True)
+        else:
+            f.append(False)
+        # 3 food in Hill
+        if state.food_storage == 3:
+            f.append(True)
+        else:
+            f.append(False)
+        # 4 food in Hill
+        if state.food_storage == 4:
+            f.append(True)
+        else:
+            f.append(False)
+        # 5 food in Hill
+        if state.food_storage == 5:
+            f.append(True)
+        else:
+            f.append(False)
+        # 6 food in Hill
+        if state.food_storage == 6:
+            f.append(True)
+        else:
+            f.append(False)
+        # 7 food in Hill
+        if state.food_storage == 7:
+            f.append(True)
+        else:
+            f.append(False)
+        # 8 food in Hill
+        if state.food_storage == 8:
+            f.append(True)
+        else:
+            f.append(False)
+        # 9 food in Hill
+        if state.food_storage == 9:
+            f.append(True)
+        else:
+            f.append(False)
+        # >=10 food in Hill
+        if state.food_storage >= 10:
+            f.append(True)
+        else:
+            f.append(False)
+
+        if len(world.my_hills() > 0):
+            # No ant defending (== in nearby radius of a hill)
+            if sum(defender_counts) == 0:
+                f.append(True)
+            else:
+                f.append(False)
+            # about 1 ant defending on average
+            if 0 < sum(defender_counts)/len(defender_counts) < 2 :
+                f.append(True)
+            else:
+                f.append(False)
+            # about 2 ants defending on average
+            if 2 <= sum(defender_counts)/len(defender_counts) < 3:
+                f.append(True)
+            else:
+                f.append(False)
+            # about 3 ants defending on average
+            if 3 <= sum(defender_counts)/len(defender_counts) < 4:
+                f.append(True)
+            else:
+                f.append(False)
+            # about 4 ants defending on average
+            if 4 <= sum(defender_counts)/len(defender_counts) < 5:
+                f.append(True)
+            else:
+                f.append(False)
+            # >=5 ants defending on average
+            if 5 <= sum(defender_counts)/len(defender_counts):
+                f.append(True)
+            else:
+                f.append(False)
+        else:
+            # No hills left :-(
+            f += [False]*6
 
         return f
 

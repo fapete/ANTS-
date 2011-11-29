@@ -6,6 +6,8 @@ Created on Oct 1, 2011
 import math
 import worldstate
 
+from collection import defaultdict
+
 class GridLookup:     
     """ Datastructure that, once created, allows the lookup of nearby points to query point in constant time.
     
@@ -94,29 +96,36 @@ class GlobalState:
         self.visited = {}
 
         self.draw_heatmap = True
-                
+        # persistant state to list all own hills, even if not visible anymore.
+        self.own_hills = world.my_hills()
+        self.paths = defaultdict(list) # A* Paths for the ants
+        self.a_star_counter = 0 # counts the number of A* searches per turn, they have to
+                                # be limited to avoid timeouts
+
+        self.food_storage = 0 # (Hopefully correctly) Counts the amount of food we have stored in the hill.
+
         self.update()
-        
+
     def update(self):
         world = self.world
-        
+
         # Parse all possible points of interest
         if len(world.enemies) > GlobalState.cutoff:
             self.grid_enemy = GridLookup(world.enemies, world.height, world.width, self.lookup_res)
         else:
             self.grid_enemy = None
-                 
+
         if len(world.food) > GlobalState.cutoff:             
             self.grid_food = GridLookup(world.food, world.height, world.width, self.lookup_res)
         else:
             self.grid_food = None
-        
+
         if len(world.ants) > GlobalState.cutoff:
             ant_locs = [ant.location for ant in self.world.ants] 
             self.grid_friendly = GridLookup(ant_locs, world.height, world.width, self.lookup_res)
         else:
             self.grid_friendly = None
-            
+
         # Update visited states
         for ant in self.world.ants:
             key = self._visited_key(ant.location)
@@ -124,7 +133,15 @@ class GlobalState:
                 self.visited[key] += 1
             else:
                 self.visited[key] = 1
-                
+
+        # Reset a*-searches for this turn
+        self.a_star_counter = 0
+
+        # Decrease food counter by amount of hills and make sure it's not negative
+        self.food_storage -= len(self.my_hills)
+        if self.food_storage < 0:
+            self.food_storage = 0
+
         # This is very important: do not import localengine at top of python file or else your code will
         # not be able to run on the competition server. 
         if self.world.engine is not None:
