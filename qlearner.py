@@ -26,7 +26,7 @@ class QLearnBot(ValueBot):
             self.set_weights(data['weights'])
             fp.close()
         else:
-            weights = [0,0,0,0,0,0,0]
+            weights = [.5,.5,.5,.5,.5,.5,.5]
         
     def setWeights(self, weights):
         self.seenCoef = weights[0]

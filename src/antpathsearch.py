@@ -3,16 +3,19 @@ Created on Aug 23, 2011
 
 @author: bensapp
 '''
-# We need a priority queue for A*
-import heapq
-
-from antsgame import AIM
+from src.worldstate import AIM
+from heapq import *
+import copy
 
 class AntPathSearch():
     ''' This is a base class for all specific search classes. '''
     
-    def __init__(self,_world):
+    def __init__(self,_world, use_cache = True):
         self.world = _world
+        if use_cache:
+            self.cache = {}
+        else:
+            self.cache = None
         
     def get_path(self,start,goal):
         ''' 
@@ -42,113 +45,103 @@ class AntPathSearch():
 class BreadthFirstSearch(AntPathSearch):
     
     def get_path(self,start,goal):
-        ''' 
-        YOUR CODE HERE.
-        (See specifications in AntPathSearch.get_path above)
-        '''
-        fringe = [start]
-        # We want to keep track of already visited places
-        visited = set(fringe)
-        # To get a path we need to know how we got to the state
-        # Will effectively build the BFS-Tree
-        parent = {}
-        while len(fringe) > 0:
-            # Queue behavior for BFS: Directions are appended and we take the first one
-            state = fringe.pop(0)
-            if state == goal:
-                break
-            for pos in self.get_successors(state):
-                if pos not in visited:
-                    visited.add(pos)
-                    fringe.append(pos)
-                    # We got to pos from state, so set parent accordingly
-                    parent[pos] = state
-        path = [goal]
-        while state != start:
-            # Prepend parent to list.
-            path = [parent[state]] + path
-            state = parent[state]
-        return path
+        q = [[start]]
+        visited = set()
+        while len(q) > 0:
+            path = q[0]
+            q.remove(path)
+            loc = path[-1]
+            if loc == goal:
+                return path
+            if loc in visited:
+                continue
+            visited.add(loc)
+            for p in self.get_successors(loc):
+                if p not in visited:
+                    new_path = copy.deepcopy(path)
+                    new_path.append(p)
+                    q.append(new_path)
+                    
+        return [goal]*100
         
         
 class DepthFirstSearch(AntPathSearch):
     
     def get_path(self,start,goal):
-        ''' 
-        YOUR CODE HERE.
-        (See specifications in AntPathSearch.get_path above)
-        '''
-        fringe = [start]
-        # We want to keep track of already visited places
-        visited = set(fringe)
-        # To get a path we need to know how we got to the state
-        # Will effectively build the DFS-Tree
-        parent = {}
-        while len(fringe) > 0:
-            # Stack behavior for DFS: Directions are appended and we take the last one
-            state = fringe.pop(-1)
-            if state == goal:
-                break
-            for pos in self.get_successors(state):
-                if pos not in visited:
-                    visited.add(pos)
-                    fringe.append(pos)
-                    # We got to pos from state, so set parent accordingly
-                    parent[pos] = state
-        path = [goal]
-        while state != start:
-            # Prepend parent to list.
-            path = [parent[state]] + path
-            state = parent[state]
-        return path
+        q = [[start]]
+        visited = set()
+        while len(q) > 0:
+            path = q[0]
+            q.remove(path)
+            loc = path[-1]
+            if loc == goal:
+                return path
+            if loc in visited:
+                continue
+            visited.add(loc)
+            for p in self.get_successors(loc):
+                if p not in visited:
+                    new_path = copy.deepcopy(path)
+                    new_path.append(p)
+                    q.insert(0,new_path)
+                    
+        return [goal]*100
     
     
 class aStarSearch(AntPathSearch):
     
     def heuristic_cost(self,state,goal):
-        ''' Make some admissable heuristic for how far we are from the goal '''
-        return self.world.manhattan_distance(state, goal)
+        return self.world.manhattan_distance(state,goal)
     
-    def get_path(self,start,goal):
-        ''' 
-        YOUR CODE HERE.
-        (See specifications in AntPathSearch.get_path above)
-        '''
-        fringe = []
-        heapq.heappush(fringe, (0,start))
-        # We want to remember where we've been
-        visited = set()
-        # g saves the cost of getting to a certain location from the start
-        g = {}
-        # Heuristic costs
-        h = {}
-        # Estimated total costs
-        f = {}
-        g[start] = 0
-        # Is there an A*-Tree? If so, we're probably building that in parent.
-        parent = {}
-        while len(fringe) > 0:
-            state = (heapq.heappop(fringe))[1]
-            if state == goal:
-                break
-            if state not in visited:
-                visited.add(state)
-                for pos in self.get_successors(state):
-                    if pos not in visited:
-                        g[pos] = g[state] + 1
-                        h[pos] = self.heuristic_cost(state, goal)
-                        f[pos] = g[pos] + h[pos]
-                        if (g[pos] <= 8):
-                            # Try to improve performance: We don't look more than 8 states ahead.
-                            heapq.heappush(fringe, (f[pos], pos))
-                        parent[pos] = state
-        if (state == goal):
-            # We found the goal in the 8 states
-            path = [goal]
-            while state != start:
-                # Prepend parent to list.
-                path = [parent[state]] + path
-                state = parent[state]
-            return path
-        else:
+    def cache_result(self, path):
+        if self.cache is None:
+            return
+        for i in xrange(len(path)):
+            for j in xrange(len(path)-1, len(path)):
+                if (path[i], path[j]) not in self.cache and (path[j], path[i]) not in self.cache:
+                    self.cache[(path[i], path[j])] = j-i
+
+    def lookup(self, start, goal):
+        if self.cache is None:
             return None
+	    if (start, goal) in self.cache:
+	        return self.cache[(start, goal)]
+	    if (goal, start) in self.cache:
+                return self.cache[(goal, start)]
+	    return None
+			
+    def get_path(self,start,goal, max_length=100):
+        if start is None or goal is None:
+            return None
+        p  = self.lookup(start, goal)
+        if p:
+            return p
+        if self.world.manhattan_distance(start, goal) > max_length:
+            return None
+        q = []
+        f = self.heuristic_cost(start, goal)
+        heappush(q, (f, ([start], 0)) )
+        visited = set()
+        while len(q) > 0:
+            (fit, (path, steps)) = heappop(q)
+            loc = path[-1]
+            self.cache_result(path)
+            if len(path) > max_length+1:
+                continue
+            if loc == goal:
+                # cache shortest path results to speed up latter run time
+                self.cache_result(path)
+                return len(path)-1
+            if loc in visited:
+                continue
+            visited.add(loc)
+            for p in self.get_successors(loc):
+                if p not in visited:
+                    new_path = copy.deepcopy(path)
+                    new_path.append(p)
+                    fit = steps + self.heuristic_cost(loc, goal) + 1
+                    if fit > max_length+1:
+                        continue
+                    heappush(q, (fit, (new_path, steps+1)))
+                    
+        return None
