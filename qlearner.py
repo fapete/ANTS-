@@ -5,16 +5,48 @@ Created on Oct 19, 2011
 '''
 from src.worldstate import AIM, AntStatus, RewardEvents
 from src.mapgen import SymmetricMap
-from src.features import CompositingFeatures, MovingTowardsFeatures, QualifyingFeatures
+from src.features import BasicFeatures, CompositingFeatures, QualifyingFeatures
 from src.state import GlobalState
 from valuebot import ValueBot
+import json
+import os.path
 import random
 
 class QLearnBot(ValueBot):
     
-    def __init__(self,world, load_file="save_bots/qbot.json"):
+    def __init__(self,world, load_file="save_bots/qbot.json", param_file="saved_qlearners/qLearn.json"):
         ValueBot.__init__(self,world, load_file)
         self.nturns = 0
+        self.percentSeen = 0
+        self.lastPercentSeen = 0
+        # Try to load saved configuration from file
+        if param_file is not None and os.path.exists(param_file):
+            fp = file(param_file, "r")
+            data = json.load(fp)
+            self.set_weights(data['weights'])
+            fp.close()
+        else:
+            weights = [0,0,0,0,0,0,0]
+        
+    def setWeights(self, weights):
+        self.seenCoef = weights[0]
+        self.deathDealtCoef = weights[1]
+        self.foodEatenCoef = weights[2]
+        self.wasKilledCoef = weights[3]
+        self.doNothingPunishment = weights[4]
+        self.alpha = weights[5]
+        self.discount = weights[6]
+    
+    def getWeights(self):
+        weights = [self.seenCoef, self.deathDealtCoef, self.foodEatenCoef, self.wasKilledCoef, self.doNothingPunishment, self.alpha, self.discount]
+        return weights
+        
+    def save(self, filename):
+        """Save Weights to File"""
+        fp = file(filename, "w")
+        data = {'weights': self.getWeights()}
+        json.dump(data, fp)
+        fp.close()
     
     def get_reward(self,reward_state):
         """ 
@@ -24,15 +56,13 @@ class QLearnBot(ValueBot):
             reward_state.was_killed: boolean flag whether the ant died this turn
             reward_state.death_dealt: Fraction of responsibility this ant contributed to killing other ants (e.g., if 2 ants killed an enemy an, each would have death_dealt=1/2
         """
-
-        '''
-        YOUR CODE HERE
-        '''
-        reward = -0.1 # base reward
-        reward += reward_state.food_eaten # Add the fraction of food eaten
-        reward += 1-reward_state.death_dealt # Teaming up should yield higher reward
-        if (reward_state.was_killed):
-            reward -= 3 # Definitely want to avoid that
+        reward = self.seenCoef*(self.percentSeen-self.lastPercentSeen)
+        if reward_state.death_dealt > 0:
+            reward += self.deathDealtCoef/reward_state.death_dealt
+        reward += self.foodEatenCoef*reward_state.food_eaten
+        reward += self.wasKilledCoef*reward_state.was_killed
+        if reward == 0:
+            reward = doNothingPunishment
         return reward
     
     def avoid_collisions(self):
@@ -55,6 +85,9 @@ class QLearnBot(ValueBot):
         loop for each living or just killed ant.  You shouldn't need to modify 
         this function.
         """
+        self.nturns += 1
+        self.lastPercentSeen = self.percentSeen
+        self.percentSeen = len([loc for loc in self.world.map if loc > -5])/self.world.width*self.world.height
         
         # Grid lookup resolution: size 10 squares
         if self.state == None:
@@ -71,7 +104,7 @@ class QLearnBot(ValueBot):
         
         # record features for action taken so we can update when we arrive in the next state next turn
         for ant in self.world.ants:    
-            ant.prev_features = self.features.extract(self.world, self.state, ant.location, ant.direction)
+            ant.prev_features = self.features.extract(self.world, self.state, ant.location, ant.direction,self.percentSeen)
             ant.prev_value = self.value(self.state,ant.location,ant.direction)
 
         print self.world.L.info(str(self))
@@ -80,6 +113,12 @@ class QLearnBot(ValueBot):
         """
             Perform an update of the weights here according to the Q-learning
             weight update rule described in the homework handout.
+            
+            alpha = alpha
+            discount = gamma
+            reward = R(s)
+            maxval = maxQw(s',a')
+            prevval = Qw(s,a)
 
             YOUR CODE HERE
         """
@@ -102,50 +141,34 @@ class QLearnBot(ValueBot):
         if 'prev_value' not in ant.__dict__:
             ant.prev_value = 0
             ant.previous_reward_events = RewardEvents()
-            ant.prev_features = self.features.extract(self.world, self.state, ant.location, actions[0])
+            ant.prev_features = self.features.extract(self.world, self.state, ant.location, actions[0], self.percentSeen)
             return actions[0]
         
         # step 1, update Q(s,a) based on going from last state, taking
         # the action issued last round, and getting to current state
         R = self.get_reward(ant.previous_reward_events)
         
-        # step size.  it's good to make this inversely proportional to the
-        # number of features, so you don't bounce out of the bowl we're trying
-        # to descend via gradient descent
-        alpha = 1.0/(10*self.features.num_features())**2
-        
-        # totally greedy default value, future rewards count for nothing, do not want
-        discount = 0.8 
-        
         # should be max_a' Q(s',a'), where right now we are in state s' and the
         # previous state was s.  You can use
         # self.value(self.state,ant.location,action) here
-        max_a = self.value(self.state, ant.location, actions[0])
-        argmax_a = actions[0]
-        for action in actions[1:]:
-            val = self.value(self.state, ant.location, action)
-            if val > max_a:
-                max_a = val
-                argmax_a = action
-        max_next_value = max_a
-        
+        max_next_value = float('-inf')
         # should be argmax_a' Q(s',a')
-        max_next_action = argmax_a
+        max_next_action = 'halt'
+        for action in actions:
+            newVal = self.value(self.state,ant.location,action)
+            if newVal > max_next_value:
+                max_next_value = newVal
+                max_next_action = action
         
         # now that we have all the quantities needed, adjust the weights
-        self.update_weights(alpha,discount,R,max_next_value,ant.prev_value,ant.prev_features)
+        self.update_weights(self.alpha,self.discount,R,max_next_value,ant.prev_value,ant.prev_features)
 
                 
         # step 2, explore or exploit? you should replace decide_to_explore with
         # something sensible based on the number of games played so far, self.ngames
-        # Let's explore for the first 1/3 games, explore 50% of the second third and exploit in the last third.
-        if self.ngames <= NGAMES/3:
+        decide_to_explore = False
+        if random.random() < 1./(self.ngames+1):
             decide_to_explore = True
-        elif self.ngames <= 2*NGAMES/3:
-            decide_to_explore = True if random.random() <= 0.5 else False
-        else:
-            decide_to_explore = False
-
         if decide_to_explore:
             return actions[0]
         else:      
@@ -155,8 +178,6 @@ class QLearnBot(ValueBot):
 # Set BOT variable to be compatible with rungame.py                            
 BOT = ValueBot
 
-NGAMES = 50
-
 if __name__ == '__main__':
     from src.localengine import LocalEngine
     from greedybot import GreedyBot
@@ -164,59 +185,28 @@ if __name__ == '__main__':
     import time
 
     start_time = time.time()
-
-    #NGAMES = 50 # made that global
     
-    if len(sys.argv) < 2:
+    if len(sys.argv) < 3:
         print 'Missing argument ---'
-        print 'Usage: python qlearner.py <game number>'
+        print 'Usage: python qlearner.py <game number> <qLearner_trainer parameter file>'
         sys.exit()
     game_number = int(sys.argv[1])
+    dir = str(sys.argv[2])
+    parameters = str(sys.argv[3])
     
 #    PLAY_TYPE = 'step'
     PLAY_TYPE = 'batch'
 #    PLAY_TYPE = 'play'
 
-
     # Run the local debugger
-#    for i in range(NGAMES):
-#
-#        engine = LocalEngine(game=None)
-#
-#        if i>0:
-#            qbot = QLearnBot(engine.GetWorld(), load_file='saved_bots/qbot.json')
-#        else:
-#            # init qbot with weights 0
-#            qbot = QLearnBot(engine.GetWorld(), load_file=None)
-#            qbot.set_features(CompositingFeatures(BasicFeatures(), BasicFeatures()))
-#            qbot.set_weights([0 for j in range (0, qbot.features.num_features())])
-#            
-#        # Generate and play on random 30 x 30 map
-#        random_map = SymmetricMap(min_dim=50, max_dim=50)
-#        random_map.random_walk_map()
-#        fp = file("src/maps/2player/my_random.map", "w")
-#        fp.write(random_map.map_text())
-#        fp.close()
-#            
-#        # set up a game between current qbot and GreedyBot
-#        engine.AddBot(qbot)        
-#        engine.AddBot(GreedyBot(engine.GetWorld()))
-#        qbot.ngames = i+1
-#        engine.Run(PLAY_TYPE,sys.argv + ["--run", "-m", "src/maps/2player/my_random.map"])
-#        qbot.save('saved_bots/qbot.json')
-#        # this is an easy way to look at the weights
-#        qbot.save_readable('saved_bots/qbot-game-%d.txt' % i)
-    if PLAY_TYPE != 'batch':
-        engine = LocalEngine(game=None)
-    else:
-        engine = LocalEngine(game=None, mode='not None')
+    engine = LocalEngine(game=None, run_mode=PLAY_TYPE)
 
     if game_number > 0:
-        qbot = QLearnBot(engine.GetWorld(), load_file='saved_bots/qbot.json')
+        qbot = QLearnBot(engine.GetWorld(), load_file=dir + '/qbot.json', param_file=parameters)
     else:
         # init qbot with weights 0
-        qbot = QLearnBot(engine.GetWorld(), load_file=None)
-        qbot.set_features(CompositingFeatures(MovingTowardsFeatures(), QualifyingFeatures()))
+        qbot = QLearnBot(engine.GetWorld(), load_file=None, param_file=None)
+        qbot.set_features(CompositingFeatures(BasicFeatures(), BasicFeatures()))
         qbot.set_weights([0 for j in range (0, qbot.features.num_features())])
         
     # Generate and play on random 30 x 30 map
