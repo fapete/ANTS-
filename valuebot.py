@@ -136,10 +136,39 @@ class ValueBot(AntsBot):
                         ant.direction = None
                     else:
                         next_locations[nextpos] = ant.ant_id
+                        # Check if we collect food
+                        self.state.food_storage += self.collects_food(nextpos, ant.direction)
 
     def reset(self):
         self.state = None
-        
+    
+    def collects_food(self, position, looking_towards):
+        """ Returns 1 if at position a piece of food is collected and 0 if not.
+            Only an approximation though.
+        """
+        if position in self.world.food:
+            # We'll move right onto a food, so we'll collect one
+            return 1
+        elif self.world.next_position(position, lookind_towards) in self.world.food:
+            # We'll move onto a field next to food and looking to it, so we'll collect it
+            # IF there's no enemy ant doing the same. There's no way to reliably discern that,
+            # so we'll try to figure out if there's an enemy ant, that has the possibility to do
+            # that and if so under-estimate.
+            interesting_food_loc = self.world.next_position(position, looking_towards)
+            south_loc = self.world.next_position(self.world.next_position(interesting_food_loc, 's'), 's')
+            west_loc = self.world.next_position(self.world.next_position(interesting_food_loc, 'w'), 'w')
+            north_loc = self.world.next_position(self.world.next_position(interesting_food_loc, 'n'), 'n')
+            east_loc = self.world.next_position(self.world.next_position(interesting_food_loc, 'e'), 'e')
+            enemies = set(self.world.enemies) # Slight speedup, lookup in set is faster
+            if south_loc in enemies or west_loc in enemies or north_loc in enemies or east_loc in enemies:
+                # (At least) one enemy ant could move to the same food
+                return 0
+            else:
+                return 1
+        else:
+            # Not moving to food
+            return 0
+
 # Set BOT variable to be compatible with rungame.py                            
 BOT = ValueBot
 

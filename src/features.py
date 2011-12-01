@@ -310,17 +310,8 @@ class QualifyingFeatures(FeatureExtractor):
             f.append(False)
         else:
             f.append(self.moving_towards(world, loc, enemy_loc, food_loc))
-
-        # Hill defending features
-        # Using any hill. Can unfortunately not be changed, as the amount of hills can vary
-        # with every game, but we need a constant set of features.
-        hill_defenders = defaultdict(set)
-        for ant in world.ants:
-            for hill in world.my_hills():
-                if nearby(world, ant.location, hill):
-                    hill_defenders[hill].add(ant.ant_id)
-        defender_counts = set([len(defenders) for defenders in hill_defenders.items()])
-
+        
+        # Food storage features
         # No food in Hill
         if state.food_storage == 0:
             f.append(True)
@@ -376,6 +367,14 @@ class QualifyingFeatures(FeatureExtractor):
             f.append(True)
         else:
             f.append(False)
+
+        # Hill defending features
+        hill_defenders = defaultdict(set)
+        for ant in world.ants:
+            for hill in world.my_hills():
+                if nearby(world, ant.location, hill):
+                    hill_defenders[hill].add(ant.ant_id)
+        defender_counts = set([len(defenders) for defenders in hill_defenders.items()])
 
         if len(world.my_hills() > 0):
             # No ant defending (== in nearby radius of a hill)

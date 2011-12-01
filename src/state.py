@@ -138,7 +138,7 @@ class GlobalState:
         self.a_star_counter = 0
 
         # Decrease food counter by amount of hills and make sure it's not negative
-        self.food_storage -= len(self.my_hills)
+        self.food_storage -= 1
         if self.food_storage < 0:
             self.food_storage = 0
 
