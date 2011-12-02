@@ -6,10 +6,13 @@ Created on Oct 1, 2011
 
 from src.batchlocalengine import BatchLocalEngine
 from greedybot import GreedyBot
-from src.features import CompositingFeatures, MovingTowardsFeatures, QualifyingFeatures
 from valuebot import ValueBot
+from qlearner import QLearnBot
 import random
 import copy
+import subprocess as sub
+import sys
+import os
 
 def win_rate(bot_wins, bot_games):
     """ Compute the win % and sort accordingly given # of wins and games.
@@ -31,29 +34,33 @@ def pick_random_feature(features, num_base, num_qual, gen):
     qual = 0
     ind = random.randint(0, len(features)-1)
     return ind
-    '''for i in range(len(features)):
-        if features[i] == 0:
-            list.append(i)
-            if i < num_base:
-                base += 1
-            else:
-                qual += 1
-                
-    if len(list) == 0:
-        return random.randint(0, len(features)-1)
-    else:
-        if base == 0 or qual == 0:
-            return list[random.randint(0, len(list)-1)]
-        ind = random.randint(0, len(list)-1)
-        # favor the base features early on then treat them evenly
-        if gen < 6:
-            type = random.randrange(0, 10)
-            if type < max(10*base/len(list), type + 5 - gen):
-                ind = random.randint(0, base-1)
-            else:
-                ind = random.randint(base, len(list)-1)
-        return list[ind]'''
 
+def run_qlearner(base_dir, ind):
+    dir = base_dir + "/" + str(ind) + "/"
+    
+    
+    num_games = 50
+    command = "python qlearner.py"
+        
+    if os.path.exists(base_dir) is False:
+        os.mkdir(base_dir)
+    if os.path.exists(dir) is False:
+        os.mkdir(dir)
+        
+    for i in range(num_games):
+    
+        # Try to run one game and capture standard out/err. 
+        current_command = command + " " + str(i) + " " + dir
+        print 'Executing ' + current_command + " ..."
+        process = sub.Popen(current_command, shell=True, stdout=sub.PIPE, stderr=sub.PIPE)
+        output, errors = process.communicate()
+        print output
+        print errors
+    
+    bot = ValueBot(dir + "qbot.json")
+    return bot
+
+GAMES_PER_PAIR = 3
 BOTS_PER_GEN = 10
 SURVIVORS_PER_GEN = 2
 TOTAL_WEIGHTS = 7
@@ -64,12 +71,12 @@ if __name__ == '__main__':
     # Run quick games: 100 turns only
     engine.PrepareGame(["--run", "-t", "100"])
     
-    base_file = "saved_bots/bot_"
+    base_file = "saved_bots/"
     generation = 0
     import sys
     full_feature = False
     new = False
-    base_file = "saved_bots/bot_"
+    base_file = "saved_bots/"
     for i in range(len(sys.argv)):
         print sys.argv[i]
         if sys.argv[i] == "-gen":
@@ -81,52 +88,76 @@ if __name__ == '__main__':
             new = True
             generation = 0
     
-    features = CompositingFeatures(MovingTowardsFeatures(full_feature), QualifyingFeatures(full_feature), full_feature)
-    
-    prev_gen = [QLearnerBot(engine.GetWorld(), load_file=(base_file + str(generation) + "_" + str(i) + ".json" if not new else None)) for i in xrange(SURVORS_PER_GEN)]
-    TOTAL_WEIGHTS = len(prev_gen[0].weights)
+    prev_gen = [QLearnBot(engine.GetWorld(), load_file=(base_file + str(generation) + "_" + str(i) + ".json" if not new else None)) for i in xrange(SURVIVORS_PER_GEN)]
+    TOTAL_WEIGHTS = len(prev_gen[0].get_params())
     num_gens = -1
-    gen_size = 10
+    gen_size = BOTS_PER_GEN/SURVIVORS_PER_GEN
     weight_range = 1
+    num_turns = 30
     # if num_gens is -1 continue infinitely
     while generation < num_gens or num_gens == -1:
+        if generation % TOTAL_WEIGHTS == 0:
+            weight_range /= 5;
         generation+=1
-        num_turns = min(max_turns, num_turns + 1)
+        
+        num_turns = min(500, num_turns + 1)
         # Initialize a random set of bots
         
-        team_a = [QLearnerBot(engine.GetWorld(), load_file=None) for i in xrange(gen_size*len(prev_gen))]
+        team_a = [QLearnBot(engine.GetWorld(), load_file=None) for i in xrange(gen_size*len(prev_gen))]
         team_b = prev_gen
+        
         change_ind = generation % TOTAL_WEIGHTS#pick_random_feature(prev_gen.weights, features.base_f.num_features(), features.qual_f.num_features(), generation)
-        print "Gen: " + str(generation) + " Training: " + str(features.feature_name(change_ind))
+        #print "Gen: " + str(generation) + " Training: " + str(features.feature_name(change_ind))
         x = 0
-        for bot in team_a:
-            w = copy.copy(prev_gen.weights)
-            w[change_ind] += weight_delta*random.uniform(-1,0) if x < gen_size/2 else weight_delta*random.uniform(0,1)
-            x += 1
+        weight_delta = weight_range/gen_size;
+        for j in xrange(gen_size):
+            for i in xrange(len(team_b)):
+                bot = team_a[j]
+                pg = team_b[i]
+                w = copy.copy(pg.get_params())
+                w[change_ind] += weight_delta*(i - gen_size/2.)
+                bot.set_params(w)
+        
+        base_dir = "./learner"
+        
+        team_a_p = [run_qlearner(base_dir, i) for i in xrange(len(team_a))]
+        team_b_p = [run_qlearner(base_dir, i) for i in xrange(len(team_b))]
             
-            bot.set_features(features)        
-            bot.set_weights(w)
         
         # Play several games against GreedyBot
         engine.PrepareGame(["--run", "-t", str(num_turns)])
-        (bot_scores, bot_wins, bot_score_diffs, bot_games) = engine.RunTournament(5, team_a, team_b, [30, 30])
+        (bot_scores, bot_wins, bot_score_diffs, bot_games) = engine.RunTournament(GAMES_PER_PAIR, team_a_p, team_b_p, [30, 30])
     
         # Sort bots by their score diff
         a_rate = win_rate(bot_wins[0], bot_games[0])
         # Sort bots by their average score differentials
         a_diffs = win_rate(bot_score_diffs[0], bot_games[0])
         
+        prev_gen = []
+        
         # update prev_gen only if it is beaten by a current gen bot
+        for i in xrange(SURVIVORS_PER_GEN):
+            if a_diffs[i][1] > 0:
+                prev_gen.append(team_a[a_diffs[i][0]])
+        remain = SURVIVORS_PER_GEN
+        for i in xrange(remain):
+            prev_gen.append(team_b[i])
+        
         if a_diffs[0][1] > 0:
-            prev_gen = team_a[a_diffs[0][0]]
+            team_a_p[0].save(base_file + "bot_%d.json" % generation)
+            team_a_p[0].save(base_file + "bot.json" % generation)
+        else:
+            team_b_p[0].save(base_file + "bot_%d.json" % generation)
         
         # Print out tournament results according to win rates 
-        print "Bot %d: Win diff = %g" % (a_diffs[0][0], a_diffs[0][1])
-        print team_a[a_diffs[0][0]].print_out()
-        team_a[i].save(base_file + str(generation) + "_bestnew.json")
+        for i in xrange(len(prev_gen)):
+            prev_gen[i].save_params(base_file + "learner_" + str(generation) + "_" + str(i) + ".json")
             
-        print prev_gen.print_out()
-        prev_gen.save(base_file + "%d_win.json" % generation)
+        print "Bot %d: Win diff = %g" % (a_diffs[0][0], a_diffs[0][1])
+        #print team_a[a_diffs[0][0]].print_out()
+            
+        #print prev_gen.print_out()
+        prev_gen.save_params(base_file + "learner_%d_win.json" % generation)
         
         # Print out tournament results according to score differentials
         #for i, diff in a_diffs:

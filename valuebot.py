@@ -8,7 +8,7 @@ import os.path
 from src.antsbot import AntsBot
 from src.worldstate import AIM, AntStatus
 from src.mapgen import SymmetricMap
-from src.features import FeatureExtractor, MovingTowardsFeatures
+from src.features import FeatureExtractor, BasicFeatures
 from src.state import GlobalState
                
 class ValueBot(AntsBot):
@@ -51,6 +51,13 @@ class ValueBot(AntsBot):
         data = {'features': self.features.to_dict(), 
                 'weights': self.weights }
         json.dump(data, fp)
+        fp.close()
+            
+    def save_readable(self, filename):
+        """Save features and weights to file."""
+        
+        fp = file(filename, "w")
+        fp.write(str(self))        
         fp.close()
             
     def __str__(self):
@@ -181,12 +188,12 @@ if __name__ == '__main__':
 
     # Load the bot from file
     if False:    
-        engine.AddBot(ValueBot(engine.GetWorld(), load_file="saved_bots/bot_0.json"))
+        engine.AddBot(ValueBot(engine.GetWorld(), load_file="/learner/0/bot.json"))
     else:
         # Set completely random weights
         b = ValueBot(engine.GetWorld(), load_file=None)
         engine.AddBot(b)        
-        b.set_features(MovingTowardsFeatures())
+        b.set_features(BasicFeatures())
         b.set_weights([random.uniform(-1,1) for i in range (0, b.features.num_features())])
         b.world.L.info("Randomly initialized to:" + str(b))
         

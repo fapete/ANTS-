@@ -23,12 +23,13 @@ class QLearnBot(ValueBot):
         if param_file is not None and os.path.exists(param_file):
             fp = file(param_file, "r")
             data = json.load(fp)
-            self.set_weights(data['weights'])
+            self.set_params(data['weights'])
             fp.close()
         else:
             weights = [.5,.5,.5,.5,.5,.5,.5]
+            self.set_params(weights)
         
-    def setWeights(self, weights):
+    def set_params(self, weights):
         self.seenCoef = weights[0]
         self.deathDealtCoef = weights[1]
         self.foodEatenCoef = weights[2]
@@ -37,14 +38,14 @@ class QLearnBot(ValueBot):
         self.alpha = weights[5]
         self.discount = weights[6]
     
-    def getWeights(self):
+    def get_params(self):
         weights = [self.seenCoef, self.deathDealtCoef, self.foodEatenCoef, self.wasKilledCoef, self.doNothingPunishment, self.alpha, self.discount]
         return weights
         
-    def save(self, filename):
+    def save_params(self, filename):
         """Save Weights to File"""
         fp = file(filename, "w")
-        data = {'weights': self.getWeights()}
+        data = {'weights': self.get_params()}
         json.dump(data, fp)
         fp.close()
     
@@ -192,17 +193,17 @@ if __name__ == '__main__':
         sys.exit()
     game_number = int(sys.argv[1])
     dir = str(sys.argv[2])
-    parameters = str(sys.argv[3])
+    #parameters = str(sys.argv[3])
     
 #    PLAY_TYPE = 'step'
     PLAY_TYPE = 'batch'
 #    PLAY_TYPE = 'play'
 
     # Run the local debugger
-    engine = LocalEngine(game=None, run_mode=PLAY_TYPE)
+    engine = LocalEngine()#, run_mode=PLAY_TYPE)
 
     if game_number > 0:
-        qbot = QLearnBot(engine.GetWorld(), load_file=dir + '/qbot.json', param_file=parameters)
+        qbot = QLearnBot(engine.GetWorld(), load_file=dir + '/qbot.json', param_file=dir+'/leaner.json')
     else:
         # init qbot with weights 0
         qbot = QLearnBot(engine.GetWorld(), load_file=None, param_file=None)
@@ -220,10 +221,10 @@ if __name__ == '__main__':
     engine.AddBot(qbot)        
     engine.AddBot(GreedyBot(engine.GetWorld()))
     qbot.ngames = game_number + 1
-    engine.Run(PLAY_TYPE,sys.argv + ["--run", "-m", "src/maps/2player/my_random.map"])
-    qbot.save('saved_bots/qbot.json')
+    engine.Run([sys.argv[0]] + ["--run", "-m", "src/maps/2player/my_random.map"])
+    qbot.save(dir + '/qbot.json')
     # this is an easy way to look at the weights
-    qbot.save_readable('saved_bots/qbot-game-%d.txt' % game_number)
+    qbot.save_readable(dir + '/qbot-game-%d.txt' % game_number)
         
     end_time = time.time()
     print 'training done, delta time = ', end_time-start_time
