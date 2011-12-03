@@ -64,6 +64,7 @@ GAMES_PER_PAIR = 3
 BOTS_PER_GEN = 10
 SURVIVORS_PER_GEN = 2
 TOTAL_WEIGHTS = 7
+RUN_MODE = 'batch'
 
 if __name__ == '__main__':
     engine = BatchLocalEngine()

@@ -200,7 +200,7 @@ if __name__ == '__main__':
 #    PLAY_TYPE = 'play'
 
     # Run the local debugger
-    engine = LocalEngine()#, run_mode=PLAY_TYPE)
+    engine = LocalEngine(run_mode=PLAY_TYPE)
 
     if game_number > 0:
         qbot = QLearnBot(engine.GetWorld(), load_file=dir + '/qbot.json', param_file=dir+'/leaner.json')
@@ -221,7 +221,7 @@ if __name__ == '__main__':
     engine.AddBot(qbot)        
     engine.AddBot(GreedyBot(engine.GetWorld()))
     qbot.ngames = game_number + 1
-    engine.Run([sys.argv[0]] + ["--run", "-m", "src/maps/2player/my_random.map"])
+    engine.Run([sys.argv[0]] + ["--run", "-m", "src/maps/2player/my_random.map"], run_mode=PLAY_TYPE)
     qbot.save(dir + '/qbot.json')
     # this is an easy way to look at the weights
     qbot.save_readable(dir + '/qbot-game-%d.txt' % game_number)

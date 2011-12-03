@@ -173,16 +173,17 @@ class Heatmap(Toplevel):
 
 # The actual local engine class. See top of file for description.
 class LocalEngine:
-    def __init__(self, game=None):
+    def __init__(self, game=None, run_mode='play'):
         self.bots = []
         self.heatmaps = {}
 
         # Set up the main Tk window which will show the map.
-        gui.grid()
-        gui.master.geometry("100x100+50+50")
-        gui.master.title("World View")
-        gui.master.resizable(True,True)
-        gui.master.lift()
+        if run_mode != 'batch':
+            gui.grid()
+            gui.master.geometry("100x100+50+50")
+            gui.master.title("World View")
+            gui.master.resizable(True,True)
+            gui.master.lift()
 
         # Set up callbacks for user input.
         gui.bind_all("<KeyPress-Return>", self.RunTurnCallback)
@@ -190,7 +191,10 @@ class LocalEngine:
 
         # Create a logging window for the main server.
         #HACK! but w/e 
-        self.logwindow = LogWindow(gui,botnum=GAMELOG_BOTNUM) 
+        if run_mode == 'batch':
+            self.logwindow = LogWindow(None,botnum=GAMELOG_BOTNUM) 
+        else:
+            self.logwindow = LogWindow(gui,botnum=GAMELOG_BOTNUM) 
         #self.logwindow.title("Engine Log")
         L = logging.getLogger("default") # Use the same logger as the
                                          # default, so the log also goes
@@ -219,7 +223,7 @@ class LocalEngine:
         self.bots.append((b, bot))
 
     # Runs the game until completion. Parses command line options.
-    def Run(self, argv):
+    def Run(self, argv, run_mode='play'):
 
         # Parse command line options and fail if unsuccessful.
         self.game_opts = self.GetOptions(argv)
@@ -236,6 +240,23 @@ class LocalEngine:
         L.debug("Game created.");
 
         self.turn = 0
+        
+        if run_mode == 'play' or run_mode=='step':
+            self.map_frame = Frame(gui)
+            gui.map, gui.mapr, geo, map_geo = self.InitMap(self.map_frame)
+            gui.master.geometry(geo)
+            self.InitControls()
+            gui.master.lift()
+        if run_mode == 'step':
+            gui.mainloop()
+        elif run_mode == 'play' or run_mode == 'batch': 
+            while 1: 
+                if run_mode == 'play':
+                    gui.update()
+                if self.RunTurn():#run_mode == 'play') == 0:
+                    break
+        else:
+            raise NotImplementedError
         
         self.map_frame = Frame(gui)
         gui.map, gui.mapr, geo, map_geo = self.InitMap(self.map_frame)
