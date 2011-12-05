@@ -105,7 +105,7 @@ class QLearnBot(ValueBot):
         
         # record features for action taken so we can update when we arrive in the next state next turn
         for ant in self.world.ants:    
-            ant.prev_features = self.features.extract(self.world, self.state, ant.location, ant.direction,self.percentSeen)
+            ant.prev_features = self.features.extract(self.world, self.state, ant.location, ant.direction)#,self.percentSeen)
             ant.prev_value = self.value(self.state,ant.location,ant.direction)
 
         print self.world.L.info(str(self))
@@ -142,7 +142,7 @@ class QLearnBot(ValueBot):
         if 'prev_value' not in ant.__dict__:
             ant.prev_value = 0
             ant.previous_reward_events = RewardEvents()
-            ant.prev_features = self.features.extract(self.world, self.state, ant.location, actions[0], self.percentSeen)
+            ant.prev_features = self.features.extract(self.world, self.state, ant.location, actions[0])#, self.percentSeen)
             return actions[0]
         
         # step 1, update Q(s,a) based on going from last state, taking

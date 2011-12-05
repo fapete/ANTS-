@@ -240,7 +240,7 @@ class LocalEngine:
         L.debug("Game created.");
 
         self.turn = 0
-        
+        gui.map = None
         if run_mode == 'play' or run_mode=='step':
             self.map_frame = Frame(gui)
             gui.map, gui.mapr, geo, map_geo = self.InitMap(self.map_frame)
@@ -354,7 +354,8 @@ class LocalEngine:
                     L.error("mapdata[%d][%d] is None" % (i,j))
 
                 # Update rectangle colors.
-                gui.map.itemconfigure(gui.mapr[i][j], fill=color)
+                if gui.map:
+                    gui.map.itemconfigure(gui.mapr[i][j], fill=color)
 
     # Renders a colored map to represent arbitrary floating point data
     # values. "Red" is hotter (larger), "Blue" is cooler (smaller).

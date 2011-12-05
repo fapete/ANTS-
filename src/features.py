@@ -20,8 +20,8 @@ class FeatureExtractor:
         ''' Create a new FeatureExtractor from a dict object.'''
         
         new_type = input_dict['_type']
-        if new_type == MovingTowardsFeatures.type_name: 
-            self.__class__ = MovingTowardsFeatures
+        if new_type == BasicFeatures.type_name: 
+            self.__class__ = BasicFeatures
         elif new_type == QualifyingFeatures.type_name:
             self.__class__ = QualifyingFeatures
         elif new_type == CompositingFeatures.type_name:
@@ -76,14 +76,14 @@ class FeatureExtractor:
         
         raise NotImplementedError
 
-class MovingTowardsFeatures(FeatureExtractor):
+class BasicFeatures(FeatureExtractor):
     """Very basic features.
     
     Computes three features: whether or not a given action takes an ant nearer to its closest
     enemy, food, or friendly ant.
     """
     
-    type_name = 'MovingTowards'
+    type_name = 'BasicTowards'
        
     def init_from_dict(self, input_dict):
         self.feature_names.append("Moving Towards Closest Enemy")
@@ -96,7 +96,7 @@ class MovingTowardsFeatures(FeatureExtractor):
         self.feature_names.append("Moving Towards Closest enemy hill")
 
     def __init__(self):
-        FeatureExtractor.__init__(self, {'_type': MovingTowardsFeatures.type_name})    
+        FeatureExtractor.__init__(self, {'_type': BasicFeatures.type_name})    
                 
     def moving_towards(self, world, loc1, loc2, target):
         """Returns true if loc2 is closer to target than loc1 in manhattan distance."""
@@ -114,18 +114,17 @@ class MovingTowardsFeatures(FeatureExtractor):
                 state.a_star_counter += 1
                 # Generate an a*-path
                 pathfinder = aStarSearch(world)
-                path = pathfinder.get_path(loc,target)
-                if path is not None:
-                    # Remove the first entry of the path, because it's just the start again
-                    path_dict[loc] = path[1:]
-                    return path_dict[loc][0] == new_loc
+                cur_path_len = pathfinder.get_path(loc, target)
+                next_path_len = pathfinder.get_path(new_loc,target)
+                if cur_path_len:
+                    return next_path_len and next_path_len < cur_path_len
                 else:
                     # Food not near enough for this ant
                     return False
             else:
                 # Fall back to greedy approximation
-                #return self.moving_towards(world, loc, new_loc, target)
-                return False
+                return self.moving_towards(world, loc, new_loc, target)
+                #return False
 
     def find_closest(self, world, loc, points):
         """Returns the closest point to loc from the list points, or None if points is empty."""
@@ -148,8 +147,11 @@ class MovingTowardsFeatures(FeatureExtractor):
 
         # get closest hills
         own_hill_loc = self.find_closest(world, loc, state.own_hills)
-        enemy_hill_loc = self.find_closest(world, loc, world.enemy_hills)
-
+        if own_hill_loc is None:
+            own_hill_loc = []
+        enemy_hill_loc = self.find_closest(world, loc, world.enemy_hills())
+        if enemy_hill_loc is None:
+            enemy_hill_loc = []
         next_loc = world.next_position(loc, action)
         world.L.debug("loc: %s, food_loc: %s, enemy_loc: %s, friendly_loc: %s" % (str(loc), str(food_loc), str(enemy_loc), str(friend_loc)))
         # Feature vector        
@@ -249,12 +251,12 @@ class QualifyingFeatures(FeatureExtractor):
         self.feature_names.append("8 food in Hill")
         self.feature_names.append("9 food in Hill")
         self.feature_names.append(">=10 food in Hill")
-        self.feature_names.append("No ant defending")
+        '''self.feature_names.append("No ant defending")
         self.feature_names.append("1 ant defending")
         self.feature_names.append("2 ants defending")
         self.feature_names.append("3 ants defending")
         self.feature_names.append("4 ants defending")
-        self.feature_names.append(">=5 ants defending")
+        self.feature_names.append(">=5 ants defending")'''
 
     def find_closest(self, world, loc, points):
         """Returns the closest point to loc from the list points, or None if points is empty."""
@@ -369,7 +371,7 @@ class QualifyingFeatures(FeatureExtractor):
             f.append(False)
 
         # Hill defending features
-        hill_defenders = defaultdict(set)
+        '''hill_defenders = defaultdict(set)
         for ant in world.ants:
             for hill in world.my_hills():
                 if nearby(world, ant.location, hill):
@@ -409,7 +411,7 @@ class QualifyingFeatures(FeatureExtractor):
                 f.append(False)
         else:
             # No hills left :-(
-            f += [False]*6
+            f += [False]*6'''
 
         return f
 
