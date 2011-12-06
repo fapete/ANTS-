@@ -20,14 +20,14 @@ class ValueBot(AntsBot):
       
     """
     
-    def __init__(self, world, load_file="valuebot.json"):
+    def __init__(self, world, load_file="valuebot.json", use_astar_cache=False):
         """Initialize, optionally loading from file. 
         
         Note: this bot disables tracking of friendly ants in the AntWorld, 
         so that ant_id is no longer consistent between turns. This speeds up
         game speed dramatically, but means it is trickier to maintain specific ant states.
         """
-        
+        self.use_astar_cache = use_astar_cache
         AntsBot.__init__(self, world)
         self.state = None
         self.features = None
@@ -43,6 +43,7 @@ class ValueBot(AntsBot):
             self.set_features(FeatureExtractor(data['features']))
             self.set_weights(data['weights'])
             fp.close()
+            
     
     def save(self, filename):
         """Save features and weights to file."""
@@ -72,6 +73,7 @@ class ValueBot(AntsBot):
     def set_features(self, extractor):
         self.features = extractor
         self.world.L.debug("Setting features: %s" % str(self.features))
+        self.features.use_astar_cache = self.use_astar_cache
         
     def set_weights(self, weights):
         """Set weight vector. Note: checks that len(weights) == self.features.num_features()."""                    

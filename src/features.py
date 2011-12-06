@@ -9,6 +9,8 @@ from worldstate import AIM
 
 from collections import defaultdict
 
+ASTAR_CUTOFF = 8
+
 class FeatureExtractor:
     ''' Extracts features from ant world state for given actions.
     
@@ -18,7 +20,8 @@ class FeatureExtractor:
     
     def __init__(self, input_dict):
         ''' Create a new FeatureExtractor from a dict object.'''
-        
+        self.pathfinder = None
+        self.use_astar_cache = False
         new_type = input_dict['_type']
         if new_type == BasicFeatures.type_name: 
             self.__class__ = BasicFeatures
@@ -98,33 +101,33 @@ class BasicFeatures(FeatureExtractor):
     def __init__(self):
         FeatureExtractor.__init__(self, {'_type': BasicFeatures.type_name})    
                 
-    def moving_towards(self, world, loc1, loc2, target):
+    def moving_towards(self, world, loc1, loc2, target, state):
         """Returns true if loc2 is closer to target than loc1 in manhattan distance."""
-        
-        return world.manhattan_distance(loc1, target) - world.manhattan_distance(loc2, target) > 0
-
-    def moving_towards_on_astar(self, world, loc, new_loc, path_dict, target, state):
-        """ Returns true, if the new_loc is the next step to go towards the target on an aStar Path. """
-        if len(path_dict[loc]) != 0:
-            # Is the path a path to the target and if so: does the action move the ant closer to it?
-            return path_dict[loc][0] == new_loc and path_dict[loc][-1] == target
+        if target:
+            return world.manhattan_distance(loc1, target) - world.manhattan_distance(loc2, target) > 0
         else:
-            # Check if we allow more a* searches. 60 should be doable without timeout.
-            if state.a_star_counter <= 60:
-                state.a_star_counter += 1
-                # Generate an a*-path
-                pathfinder = aStarSearch(world)
-                cur_path_len = pathfinder.get_path(loc, target)
-                next_path_len = pathfinder.get_path(new_loc,target)
-                if cur_path_len:
-                    return next_path_len and next_path_len < cur_path_len
-                else:
-                    # Food not near enough for this ant
-                    return False
+            return False
+
+    def moving_towards_on_astar(self, world, loc, new_loc, target, state):
+        """ Returns true, if the new_loc is the next step to go towards the target on an aStar Path. """
+        if self.pathfinder is None:
+            self.pathfinder = aStarSearch(world, use_cache=self.use_astar_cache)
+        if self.pathfinder.lookup(loc, target) and self.pathfinder.lookup(new_loc, target):
+            return self.pathfinder.lookup(loc, target)
+        elif state.a_star_counter < 0:
+            state.a_star_counter += 1
+            # Generate an a*-path
+            cur_path_len = self.pathfinder.get_path(loc, target)
+            next_path_len = self.pathfinder.get_path(new_loc,target)
+            if cur_path_len:
+                return next_path_len and next_path_len < cur_path_len
             else:
-                # Fall back to greedy approximation
-                return self.moving_towards(world, loc, new_loc, target)
-                #return False
+                # Food not near enough for this ant
+                return False
+        else:
+            # Fall back to greedy approximation
+            return self.moving_towards(world, loc, new_loc, target, state)
+            #return False
 
     def find_closest(self, world, loc, points):
         """Returns the closest point to loc from the list points, or None if points is empty."""
@@ -140,7 +143,8 @@ class BasicFeatures(FeatureExtractor):
         
     def extract(self, world, state, loc, action):
         """Extract the three simple features."""
-        
+        if action is None:
+            action = 'halt'
         food_loc = self.find_closest(world, loc, state.lookup_nearby_food(loc))
         enemy_loc = self.find_closest(world, loc, state.lookup_nearby_enemy(loc))
         friend_loc = self.find_closest(world, loc, state.lookup_nearby_friendly(loc))
@@ -161,26 +165,26 @@ class BasicFeatures(FeatureExtractor):
         if enemy_loc is None:
             f.append(False)
         else:
-            f.append(self.moving_towards(world, loc, next_loc, enemy_loc));
+            f.append(self.moving_towards(world, loc, next_loc, enemy_loc, state));
         
         # Moving towards food
         if food_loc is None:
             f.append(False)
         else:
-            f.append(self.moving_towards(world, loc, next_loc, food_loc));
+            f.append(self.moving_towards(world, loc, next_loc, food_loc, state));
         
 
         # Moving towards friendly
         if friend_loc is None:
             f.append(False)
         else:
-            f.append(self.moving_towards(world, loc, next_loc, friend_loc));
+            f.append(self.moving_towards(world, loc, next_loc, friend_loc, state));
         
         # Moving on aStar-path towards food
         if food_loc is None:
             f.append(False)
         else:
-            f.append(self.moving_towards_on_astar(world, loc, next_loc, state.paths, food_loc, state))
+            f.append(self.moving_towards_on_astar(world, loc, next_loc, food_loc, state))
 
         # Moving on aStar-path towards an enemy
         # This is a stupid feature.
@@ -205,13 +209,13 @@ class BasicFeatures(FeatureExtractor):
         if own_hill_loc is None:
             f.append(False)
         else:
-            f.append(self.moving_towards_on_astar(world, loc, next_loc, state.paths, food_loc, state))
+            f.append(self.moving_towards(world, loc, next_loc, food_loc, state))
 
         # Moving towards closest enemy hill
         if enemy_hill_loc is None:
             f.append(False)
         else:
-            f.append(self.moving_towards_on_astar(world, loc, next_loc, state.paths, food_loc, state))
+            f.append(self.moving_towards(world, loc, next_loc, food_loc, state))
 
 
         return f

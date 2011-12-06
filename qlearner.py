@@ -15,7 +15,8 @@ import random
 class QLearnBot(ValueBot):
     
     def __init__(self,world, load_file="save_bots/qbot.json", param_file="saved_qlearners/qLearn.json"):
-        ValueBot.__init__(self,world, load_file)
+        ValueBot.__init__(self,world, load_file, use_astar_cache=True)
+        
         self.nturns = 0
         self.percentSeen = 0
         self.lastPercentSeen = 0
@@ -63,7 +64,7 @@ class QLearnBot(ValueBot):
         reward += self.foodEatenCoef*reward_state.food_eaten
         reward += self.wasKilledCoef*reward_state.was_killed
         if reward == 0:
-            reward = doNothingPunishment
+            reward = self.doNothingPunishment
         return reward
     
     def avoid_collisions(self):
@@ -87,8 +88,8 @@ class QLearnBot(ValueBot):
         this function.
         """
         self.nturns += 1
-        self.lastPercentSeen = self.percentSeen
-        self.percentSeen = len([loc for loc in self.world.map if loc > -5])/self.world.width*self.world.height
+        #self.lastPercentSeen = self.percentSeen
+        #self.percentSeen = len([loc for loc in self.world.map if loc > -5])/self.world.width*self.world.height
         
         # Grid lookup resolution: size 10 squares
         if self.state == None:
@@ -143,7 +144,7 @@ class QLearnBot(ValueBot):
             ant.prev_value = 0
             ant.previous_reward_events = RewardEvents()
             ant.prev_features = self.features.extract(self.world, self.state, ant.location, actions[0])#, self.percentSeen)
-            return actions[0]
+            #return actions[0]
         
         # step 1, update Q(s,a) based on going from last state, taking
         # the action issued last round, and getting to current state
@@ -156,6 +157,8 @@ class QLearnBot(ValueBot):
         # should be argmax_a' Q(s',a')
         max_next_action = 'halt'
         for action in actions:
+            if action is None:
+                action = 'halt'
             newVal = self.value(self.state,ant.location,action)
             if newVal > max_next_value:
                 max_next_value = newVal
@@ -186,7 +189,7 @@ if __name__ == '__main__':
     import time
 
     start_time = time.time()
-    
+    max_turns = 150
     if len(sys.argv) < 3:
         print 'Missing argument ---'
         print 'Usage: python qlearner.py <game number> <qLearner_trainer parameter file>'
@@ -196,14 +199,14 @@ if __name__ == '__main__':
     #parameters = str(sys.argv[3])
     
 #    PLAY_TYPE = 'step'
-    PLAY_TYPE = 'batch'
-#    PLAY_TYPE = 'play'
+#    PLAY_TYPE = 'batch'
+    PLAY_TYPE = 'play'
 
     # Run the local debugger
     engine = LocalEngine(run_mode=PLAY_TYPE)
 
     if game_number > 0:
-        qbot = QLearnBot(engine.GetWorld(), load_file=dir + '/qbot.json', param_file=dir+'/leaner.json')
+        qbot = QLearnBot(engine.GetWorld(), load_file=dir + '/qbot.json', param_file=dir+'/learner.json')
     else:
         # init qbot with weights 0
         qbot = QLearnBot(engine.GetWorld(), load_file=None, param_file=None)
@@ -221,7 +224,7 @@ if __name__ == '__main__':
     engine.AddBot(qbot)        
     engine.AddBot(GreedyBot(engine.GetWorld()))
     qbot.ngames = game_number + 1
-    engine.Run([sys.argv[0]] + ["--run", "-m", "src/maps/2player/my_random.map"], run_mode=PLAY_TYPE)
+    engine.Run([sys.argv[0]] + ["--run", "-t", str(max_turns),"-m", "src/maps/2player/my_random.map"], run_mode=PLAY_TYPE)
     qbot.save(dir + '/qbot.json')
     # this is an easy way to look at the weights
     qbot.save_readable(dir + '/qbot-game-%d.txt' % game_number)
