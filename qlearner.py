@@ -27,20 +27,21 @@ class QLearnBot(ValueBot):
             self.set_params(data['weights'])
             fp.close()
         else:
-            weights = [.5,.5,.5,.5,.5,.5,.5]
+            weights = [.5,.5,.5,.5,.5,.5]
             self.set_params(weights)
         
     def set_params(self, weights):
-        self.seenCoef = weights[0]
-        self.deathDealtCoef = weights[1]
-        self.foodEatenCoef = weights[2]
-        self.wasKilledCoef = weights[3]
-        self.doNothingPunishment = weights[4]
-        self.alpha = weights[5]
-        self.discount = weights[6]
+        self.alpha = .0001
+        self.discount = weights[0]
+        self.seenCoef = weights[1]
+        self.deathDealtCoef = weights[2]
+        self.foodEatenCoef = weights[3]
+        self.wasKilledCoef = weights[4]
+        self.doNothingPunishment = weights[5]
+        
     
     def get_params(self):
-        weights = [self.seenCoef, self.deathDealtCoef, self.foodEatenCoef, self.wasKilledCoef, self.doNothingPunishment, self.alpha, self.discount]
+        weights = [self.discount, self.seenCoef, self.deathDealtCoef, self.foodEatenCoef, self.wasKilledCoef, self.doNothingPunishment]
         return weights
         
     def save_params(self, filename):
@@ -191,7 +192,7 @@ if __name__ == '__main__':
     import time
 
     start_time = time.time()
-    max_turns = 50
+    max_turns = 100
     if len(sys.argv) < 3:
         print 'Missing argument ---'
         print 'Usage: python qlearner.py <game number> <qLearner_trainer parameter file>'
