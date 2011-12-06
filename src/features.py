@@ -255,6 +255,22 @@ class QualifyingFeatures(FeatureExtractor):
         self.feature_names.append("8 food in Hill")
         self.feature_names.append("9 food in Hill")
         self.feature_names.append(">=10 food in Hill")
+        self.feature_names.append("4 Squares from My Hill")
+        self.feature_names.append("3 Squares from My Hill")
+        self.feature_names.append("2 Squares from My Hill")
+        self.feature_names.append("1 Squares from My Hill")
+        self.feature_names.append(">=5 Squares from My Hill")
+        self.feature_names.append("On Top Of My Hill")
+        self.feature_names.append("4 Squares from Enemy Hill")
+        self.feature_names.append("3 Squares from Enemy Hill")
+        self.feature_names.append("2 Squares from Enemy Hill")
+        self.feature_names.append("1 Squares from Enemy Hill")
+        self.feature_names.append(">=5 Squares from Enemy Hill")
+        self.feature_names.append("4 Squares from Food")
+        self.feature_names.append("3 Squares from Food")
+        self.feature_names.append("2 Squares from Food")
+        self.feature_names.append("1 Squares from Food")
+        self.feature_names.append(">=5 Squares from Food")
         '''self.feature_names.append("No ant defending")
         self.feature_names.append("1 ant defending")
         self.feature_names.append("2 ants defending")
@@ -289,6 +305,22 @@ class QualifyingFeatures(FeatureExtractor):
         enemy_loc = self.find_closest(world, loc, state.lookup_nearby_enemy(loc))
         friend_loc = self.find_closest(world, loc, state.lookup_nearby_friendly(loc))
         food_loc = self.find_closest(world, loc, state.lookup_nearby_food(loc))
+        food_dist = -1
+        if food_loc != None:
+            food_dist = world.manhattan_distance(loc, food_loc)
+        # get closest hills
+        own_hill_loc = self.find_closest(world, loc, state.own_hills)
+        own_hill_dist = -1
+        if own_hill_loc is None:
+            own_hill_loc = []
+        else:
+            own_hill_dist = world.manhattan_distance(loc,own_hill_loc)
+        enemy_hill_loc = self.find_closest(world, loc, world.enemy_hills())
+        enemy_hill_dist = -1
+        if enemy_hill_loc is None:
+            enemy_hill_loc = []
+        else:
+            enemy_hill_dist = world.manhattan_distance(loc,enemy_hill_loc)
         
         f = []
         # Enemy nearby
@@ -318,62 +350,37 @@ class QualifyingFeatures(FeatureExtractor):
             f.append(self.moving_towards(world, loc, enemy_loc, food_loc))
         
         # Food storage features
-        # No food in Hill
-        if state.food_storage == 0:
-            f.append(True)
-        else:
-            f.append(False)
-        # 1 food in Hill
-        if state.food_storage == 1:
-            f.append(True)
-        else:
-            f.append(False)
-        # 2 food in Hill
-        if state.food_storage == 2:
-            f.append(True)
-        else:
-            f.append(False)
-        # 3 food in Hill
-        if state.food_storage == 3:
-            f.append(True)
-        else:
-            f.append(False)
-        # 4 food in Hill
-        if state.food_storage == 4:
-            f.append(True)
-        else:
-            f.append(False)
-        # 5 food in Hill
-        if state.food_storage == 5:
-            f.append(True)
-        else:
-            f.append(False)
-        # 6 food in Hill
-        if state.food_storage == 6:
-            f.append(True)
-        else:
-            f.append(False)
-        # 7 food in Hill
-        if state.food_storage == 7:
-            f.append(True)
-        else:
-            f.append(False)
-        # 8 food in Hill
-        if state.food_storage == 8:
-            f.append(True)
-        else:
-            f.append(False)
-        # 9 food in Hill
-        if state.food_storage == 9:
-            f.append(True)
-        else:
-            f.append(False)
+        # [0-9] food stored in hill.
+        for i in xrange(10):
+            f.append(state.food_storage == i)
         # >=10 food in Hill
-        if state.food_storage >= 10:
-            f.append(True)
+        f.append(state.food_storage >= 10)
+        # Distance from my hill
+        if own_hill_dist != -1:
+            for i in xrange(5):
+                f.append(own_hill_dist) == i
+            f.append(own_hill_dist >= 5)
         else:
-            f.append(False)
-
+            for i in xrange(6):
+                f.append(False)
+        # Distance from enemy hill
+        if enemy_hill_dist != -1:
+            for i in xrange(1,5):
+                f.append(enemy_hill_dist) == i
+            f.append(enemy_hill_dist >= 5)
+        else:
+            for i in xrange(5):
+                f.append(False)
+        # Distance from food
+        if food_dist != -1:
+            for i in xrange(1,5):
+                f.append(food_dist) == i
+            f.append(food_dist >= 5)
+        else:
+            for i in xrange(5):
+                f.append(False)
+            
+        
         # Hill defending features
         '''hill_defenders = defaultdict(set)
         for ant in world.ants:
@@ -474,7 +481,8 @@ class CompositingFeatures(FeatureExtractor):
         f.extend(self.base_f.extract(world, state, loc, action))
         # Now multiply every base feature with every qualifying feature
         # This is done in the same order as the names are generated.
-        f.extend([i*j for i in self.base_f.extract(world, state, loc, action)\
-            for j in self.qual_f.extract(world, state, loc, action)])
+        base_extracted = self.base_f.extract(world, state, loc, action)
+        qual_extracted = self.qual_f.extract(world, state, loc, action)
+        f.extend([i*j for i in base_extracted for j in qual_extracted])
         # Return the feature vector
         return f
