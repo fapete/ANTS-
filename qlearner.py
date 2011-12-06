@@ -189,7 +189,7 @@ if __name__ == '__main__':
     import time
 
     start_time = time.time()
-    max_turns = 150
+    max_turns = 10
     if len(sys.argv) < 3:
         print 'Missing argument ---'
         print 'Usage: python qlearner.py <game number> <qLearner_trainer parameter file>'
@@ -199,8 +199,8 @@ if __name__ == '__main__':
     #parameters = str(sys.argv[3])
     
 #    PLAY_TYPE = 'step'
-#    PLAY_TYPE = 'batch'
-    PLAY_TYPE = 'play'
+    PLAY_TYPE = 'batch'
+#    PLAY_TYPE = 'play'
 
     # Run the local debugger
     engine = LocalEngine(run_mode=PLAY_TYPE)
