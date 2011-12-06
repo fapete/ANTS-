@@ -258,13 +258,6 @@ class LocalEngine:
         else:
             raise NotImplementedError
         
-        self.map_frame = Frame(gui)
-        gui.map, gui.mapr, geo, map_geo = self.InitMap(self.map_frame)
-        gui.master.geometry(geo)
-        
-        self.InitControls()
-        gui.master.lift()
-        gui.mainloop()
 #        if self.game_opts['step_through']:
 #        
 #        else:
@@ -446,7 +439,7 @@ class LocalEngine:
             L.info("Game over? " + str(game.game_over()))
             gui.quit()
             game.finish_game()
-            return 0
+            return True
     
         # Initial turn is a special case. 
         if self.turn == 0:
