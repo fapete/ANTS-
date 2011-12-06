@@ -34,6 +34,7 @@ def pick_random_feature(features, num_base, num_qual, gen):
     qual = 0
     ind = random.randint(0, len(features)-1)
     return ind
+    
 
 def run_qlearner(base_dir, ind, learner):
     dir = base_dir + "/" + str(ind) + "/"
@@ -41,12 +42,12 @@ def run_qlearner(base_dir, ind, learner):
     num_games = 10
     command = "python qlearner.py"
     
-    learner.save_params(dir+'/learner.json')
-    
     if os.path.exists(base_dir) is False:
         os.mkdir(base_dir)
     if os.path.exists(dir) is False:
         os.mkdir(dir)
+        
+    learner.save_params(dir+'/learner.json')
         
     for i in range(num_games):
     
@@ -63,14 +64,14 @@ def run_qlearner(base_dir, ind, learner):
 GAMES_PER_PAIR = 3
 BOTS_PER_GEN = 5
 SURVIVORS_PER_GEN = 1
-TOTAL_WEIGHTS = 7
+TOTAL_WEIGHTS = 6
 RUN_MODE = 'batch'
 
 if __name__ == '__main__':
     engine = BatchLocalEngine()
 
     # Run quick games: 100 turns only
-    engine.PrepareGame(["--run", "-t", "100"])
+    engine.PrepareGame(["--run", "-t", "1500"])
     
     base_file = "saved_bots/"
     generation = 0
@@ -123,7 +124,7 @@ if __name__ == '__main__':
                 w[change_ind] += weight_delta*(i - gen_size/2)
                 bot.set_params(w)
         
-        team_a_p = [ValueBot(engine.GetWorld(), run_qlearner(base_dir, i, team_a[i])) for i in xrange(len(team_a))]     
+        team_a_p = [ValueBot(engine.GetWorld(), run_qlearner(base_dir, i+len(prev_gen), team_a[i])) for i in xrange(len(team_a))]     
         team_b_p = prev_gen_p       
         
         # Play several games against GreedyBot

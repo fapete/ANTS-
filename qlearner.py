@@ -27,20 +27,21 @@ class QLearnBot(ValueBot):
             self.set_params(data['weights'])
             fp.close()
         else:
-            weights = [.5,.5,.5,.5,.5,.5,.5]
+            weights = [.5,.5,.5,.5,.5,.5]
             self.set_params(weights)
         
     def set_params(self, weights):
-        self.seenCoef = weights[0]
-        self.deathDealtCoef = weights[1]
-        self.foodEatenCoef = weights[2]
-        self.wasKilledCoef = weights[3]
-        self.doNothingPunishment = weights[4]
-        self.alpha = weights[5]
-        self.discount = weights[6]
+        self.alpha = .0001
+        self.discount = weights[0]
+        self.seenCoef = weights[1]
+        self.deathDealtCoef = weights[2]
+        self.foodEatenCoef = weights[3]
+        self.wasKilledCoef = weights[4]
+        self.doNothingPunishment = weights[5]
+        
     
     def get_params(self):
-        weights = [self.seenCoef, self.deathDealtCoef, self.foodEatenCoef, self.wasKilledCoef, self.doNothingPunishment, self.alpha, self.discount]
+        weights = [self.discount, self.seenCoef, self.deathDealtCoef, self.foodEatenCoef, self.wasKilledCoef, self.doNothingPunishment]
         return weights
         
     def save_params(self, filename):
@@ -105,7 +106,11 @@ class QLearnBot(ValueBot):
                     ant.direction = None
                 
         self.avoid_collisions()
-        
+        if ant.direction is not None:
+            # Check if we collect food
+            nextpos = self.world.next_position(ant.location, ant.direction)
+            self.state.food_storage += self.collects_food(nextpos, ant.direction)
+
         # record features for action taken so we can update when we arrive in the next state next turn
         for ant in self.world.ants:    
             ant.prev_features = self.features.extract(self.world, self.state, ant.location, ant.direction)#,self.percentSeen)
@@ -129,6 +134,32 @@ class QLearnBot(ValueBot):
         for i in range(len(self.weights)):
             self.weights[i] += alpha*(reward+discount*maxval-prevval)*features[i]
         
+    def collects_food(self, position, looking_towards):
+        """ Returns 1 if at position a piece of food is collected and 0 if not.
+            Only an approximation though.
+        """
+        if position in self.world.food:
+            # We'll move right onto a food, so we'll collect one
+            return 1
+        elif self.world.next_position(position, looking_towards) in self.world.food:
+            # We'll move onto a field next to food and looking to it, so we'll collect it
+            # IF there's no enemy ant doing the same. There's no way to reliably discern that,
+            # so we'll try to figure out if there's an enemy ant, that has the possibility to do
+            # that and if so under-estimate.
+            interesting_food_loc = self.world.next_position(position, looking_towards)
+            south_loc = self.world.next_position(self.world.next_position(interesting_food_loc, 's'), 's')
+            west_loc = self.world.next_position(self.world.next_position(interesting_food_loc, 'w'), 'w')
+            north_loc = self.world.next_position(self.world.next_position(interesting_food_loc, 'n'), 'n')
+            east_loc = self.world.next_position(self.world.next_position(interesting_food_loc, 'e'), 'e')
+            enemies = set(self.world.enemies) # Slight speedup, lookup in set is faster
+            if south_loc in enemies or west_loc in enemies or north_loc in enemies or east_loc in enemies:
+                # (At least) one enemy ant could move to the same food
+                return 0
+            else:
+                return 1
+        else:
+            # Not moving to food
+            return 0
 
     def explore_and_exploit(self,ant):
         '''
@@ -191,7 +222,7 @@ if __name__ == '__main__':
     import time
 
     start_time = time.time()
-    max_turns = 50
+    max_turns = 100
     if len(sys.argv) < 3:
         print 'Missing argument ---'
         print 'Usage: python qlearner.py <game number> <qLearner_trainer parameter file>'
