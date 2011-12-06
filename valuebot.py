@@ -8,7 +8,7 @@ import os.path
 from src.antsbot import AntsBot
 from src.worldstate import AIM, AntStatus
 from src.mapgen import SymmetricMap
-from src.features import FeatureExtractor, BasicFeatures
+from src.features import FeatureExtractor, BasicFeatures, CompositingFeatures, QualifyingFeatures
 from src.state import GlobalState
                
 class ValueBot(AntsBot):
@@ -44,8 +44,8 @@ class ValueBot(AntsBot):
             self.set_weights(data['weights'])
             fp.close()
         else:
-            qbot.set_features(CompositingFeatures(BasicFeatures(), QualifyingFeatures()))
-            qbot.set_weights([0 for j in range (0, qbot.features.num_features())])
+            self.set_features(CompositingFeatures(BasicFeatures(), QualifyingFeatures()))
+            self.set_weights([0 for j in range (0, self.features.num_features())])
         
             
     
