@@ -137,7 +137,7 @@ class ValueBot(AntsBot):
             if ant.status == AntStatus.ALIVE:
                 ant.direction = self.get_direction(ant)
                 if ant.direction == 'halt' or ant.direction == None:
-                    ant.direction = None
+                    ant.direction = 'halt'
                 else:
                     # Basic collision detection: don't land on the same square as another friendly ant.
                     nextpos = self.world.next_position(ant.location, ant.direction) 
@@ -158,7 +158,7 @@ class ValueBot(AntsBot):
         if position in self.world.food:
             # We'll move right onto a food, so we'll collect one
             return 1
-        elif self.world.next_position(position, lookind_towards) in self.world.food:
+        elif self.world.next_position(position, looking_towards) in self.world.food:
             # We'll move onto a field next to food and looking to it, so we'll collect it
             # IF there's no enemy ant doing the same. There's no way to reliably discern that,
             # so we'll try to figure out if there's an enemy ant, that has the possibility to do
