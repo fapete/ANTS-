@@ -3,7 +3,7 @@ Created on Aug 23, 2011
 
 @author: bensapp
 '''
-from src.worldstate import AIM
+from worldstate import AIM
 from heapq import *
 import copy
 

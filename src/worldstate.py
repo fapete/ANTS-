@@ -377,7 +377,7 @@ class AntWorld(object):
 
         # Check for invalid direction.
         for a in self.ants:
-            if a.direction != None and a.direction not in  ['n','s','e','w']:
+            if a.direction != None and a.direction not in  ['n','s','e','w', 'halt']:
                 raise AssertionError("%s is not a valid direction!" % a.direction)
             
         # Only send orders for alive, moving ants.
@@ -417,6 +417,8 @@ class AntWorld(object):
 
     def next_position(self, location, direction):
         '''Get the next position occupied by an ant moving in a specific direction. (Sphere world makes this non-trivial).'''
+        if direction is None:
+            direction = 'halt'
         row, col = location
         d_row, d_col = AIM[direction]
         return ((row + d_row) % self.height, (col + d_col) % self.width)
