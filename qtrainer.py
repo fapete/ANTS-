@@ -35,13 +35,14 @@ def pick_random_feature(features, num_base, num_qual, gen):
     ind = random.randint(0, len(features)-1)
     return ind
 
-def run_qlearner(base_dir, ind):
+def run_qlearner(base_dir, ind, learner):
     dir = base_dir + "/" + str(ind) + "/"
     
-    
-    num_games = 50
+    num_games = 10
     command = "python qlearner.py"
-        
+    
+    learner.save_params(dir+'/learner.json')
+    
     if os.path.exists(base_dir) is False:
         os.mkdir(base_dir)
     if os.path.exists(dir) is False:
@@ -57,12 +58,11 @@ def run_qlearner(base_dir, ind):
         print output
         print errors
     
-    bot = ValueBot(dir + "qbot.json")
-    return bot
+    return dir + "qbot.json"
 
 GAMES_PER_PAIR = 3
-BOTS_PER_GEN = 10
-SURVIVORS_PER_GEN = 2
+BOTS_PER_GEN = 5
+SURVIVORS_PER_GEN = 1
 TOTAL_WEIGHTS = 7
 RUN_MODE = 'batch'
 
@@ -89,16 +89,20 @@ if __name__ == '__main__':
             new = True
             generation = 0
     
+    base_dir = "./learner"
+    
     prev_gen = [QLearnBot(engine.GetWorld(), load_file=(base_file + str(generation) + "_" + str(i) + ".json" if not new else None)) for i in xrange(SURVIVORS_PER_GEN)]
+    prev_gen_p = [ValueBot(engine.GetWorld(), run_qlearner(base_dir, i, prev_gen[i])) for i in xrange(len(prev_gen))]
+    
     TOTAL_WEIGHTS = len(prev_gen[0].get_params())
     num_gens = -1
     gen_size = BOTS_PER_GEN/SURVIVORS_PER_GEN
-    weight_range = 1
+    weight_range = 5.
     num_turns = 30
     # if num_gens is -1 continue infinitely
     while generation < num_gens or num_gens == -1:
         if generation % TOTAL_WEIGHTS == 0:
-            weight_range /= 5;
+            weight_range /= 5.;
         generation+=1
         
         num_turns = min(500, num_turns + 1)
@@ -107,7 +111,7 @@ if __name__ == '__main__':
         team_a = [QLearnBot(engine.GetWorld(), load_file=None) for i in xrange(gen_size*len(prev_gen))]
         team_b = prev_gen
         
-        change_ind = generation % TOTAL_WEIGHTS#pick_random_feature(prev_gen.weights, features.base_f.num_features(), features.qual_f.num_features(), generation)
+        change_ind = (generation-1) % TOTAL_WEIGHTS#pick_random_feature(prev_gen.weights, features.base_f.num_features(), features.qual_f.num_features(), generation)
         #print "Gen: " + str(generation) + " Training: " + str(features.feature_name(change_ind))
         x = 0
         weight_delta = weight_range/gen_size;
@@ -116,14 +120,11 @@ if __name__ == '__main__':
                 bot = team_a[j]
                 pg = team_b[i]
                 w = copy.copy(pg.get_params())
-                w[change_ind] += weight_delta*(i - gen_size/2.)
+                w[change_ind] += weight_delta*(i - gen_size/2)
                 bot.set_params(w)
         
-        base_dir = "./learner"
-        
-        team_a_p = [run_qlearner(base_dir, i) for i in xrange(len(team_a))]
-        team_b_p = [run_qlearner(base_dir, i) for i in xrange(len(team_b))]
-            
+        team_a_p = [ValueBot(engine.GetWorld(), run_qlearner(base_dir, i, team_a[i])) for i in xrange(len(team_a))]     
+        team_b_p = prev_gen_p       
         
         # Play several games against GreedyBot
         engine.PrepareGame(["--run", "-t", str(num_turns)])
@@ -136,17 +137,20 @@ if __name__ == '__main__':
         
         prev_gen = []
         
+        prev_gen_b = []
         # update prev_gen only if it is beaten by a current gen bot
         for i in xrange(SURVIVORS_PER_GEN):
             if a_diffs[i][1] > 0:
                 prev_gen.append(team_a[a_diffs[i][0]])
+                prev_gen_b.append(team_a_p[a_diffs[i][0]])
         remain = SURVIVORS_PER_GEN
         for i in xrange(remain):
             prev_gen.append(team_b[i])
+            prev_gen_b.append(team_b_p[i])
         
         if a_diffs[0][1] > 0:
             team_a_p[0].save(base_file + "bot_%d.json" % generation)
-            team_a_p[0].save(base_file + "bot.json" % generation)
+            team_a_p[0].save(base_file + "bot.json")
         else:
             team_b_p[0].save(base_file + "bot_%d.json" % generation)
         
@@ -158,7 +162,7 @@ if __name__ == '__main__':
         #print team_a[a_diffs[0][0]].print_out()
             
         #print prev_gen.print_out()
-        prev_gen.save_params(base_file + "learner_%d_win.json" % generation)
+        prev_gen[0].save_params(base_file + "learner_%d_win.json" % generation)
         
         # Print out tournament results according to score differentials
         #for i, diff in a_diffs:

@@ -101,6 +101,8 @@ class QLearnBot(ValueBot):
         for ant in self.world.ants:
             if ant.status == AntStatus.ALIVE or ant.previous_reward_events.was_killed:
                 ant.direction = self.explore_and_exploit(ant)
+                if ant.direction is 'halt':
+                    ant.direction = None
                 
         self.avoid_collisions()
         
@@ -189,7 +191,7 @@ if __name__ == '__main__':
     import time
 
     start_time = time.time()
-    max_turns = 10
+    max_turns = 50
     if len(sys.argv) < 3:
         print 'Missing argument ---'
         print 'Usage: python qlearner.py <game number> <qLearner_trainer parameter file>'
@@ -210,8 +212,8 @@ if __name__ == '__main__':
     else:
         # init qbot with weights 0
         qbot = QLearnBot(engine.GetWorld(), load_file=None, param_file=None)
-        qbot.set_features(CompositingFeatures(BasicFeatures(), BasicFeatures()))
-        qbot.set_weights([0 for j in range (0, qbot.features.num_features())])
+        #qbot.set_features(CompositingFeatures(BasicFeatures(), BasicFeatures()))
+        #qbot.set_weights([0 for j in range (0, qbot.features.num_features())])
         
     # Generate and play on random 30 x 30 map
     random_map = SymmetricMap(min_dim=50, max_dim=50)

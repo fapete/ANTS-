@@ -362,7 +362,7 @@ class BatchLocalEngine:
         # not reset game state until after turn 0.
         if self.turn > 0:
             game.start_turn()
-        
+        STRICT_MODE = True
         # Have the game process the cached moves.
         for b,moves in bot_moves:
             valid, ignored, invalid = game.do_moves(b, moves)
