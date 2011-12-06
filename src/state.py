@@ -7,6 +7,7 @@ import math
 import worldstate
 
 from collections import defaultdict
+from copy import deepcopy
 
 class GridLookup:     
     """ Datastructure that, once created, allows the lookup of nearby points to query point in constant time.
@@ -94,10 +95,14 @@ class GlobalState:
         self.lookup_res = resolution
         self.visited_res = int(min(self.world.height/visited_cells, self.world.width/visited_cells))
         self.visited = {}
+        self.curr_food_locations = []
+        self.old_food_locations = []
 
         self.draw_heatmap = True
         # persistant state to list all own hills, even if not visible anymore.
         self.own_hills = world.my_hills()
+        self.oldNHills = -1
+        self.NHills = len(self.own_hills)
         self.paths = defaultdict(list) # A* Paths for the ants
         self.a_star_counter = 0 # counts the number of A* searches per turn, they have to
                                 # be limited to avoid timeouts
@@ -107,6 +112,9 @@ class GlobalState:
         self.update()
 
     def update(self):
+        self.oldNHills = self.NHills;
+        self.NHills = len(self.own_hills)
+        
         world = self.world
 
         # Parse all possible points of interest
