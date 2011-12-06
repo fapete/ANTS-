@@ -43,6 +43,10 @@ class ValueBot(AntsBot):
             self.set_features(FeatureExtractor(data['features']))
             self.set_weights(data['weights'])
             fp.close()
+        else:
+            qbot.set_features(CompositingFeatures(BasicFeatures(), BasicFeatures()))
+            qbot.set_weights([0 for j in range (0, qbot.features.num_features())])
+        
             
     
     def save(self, filename):
