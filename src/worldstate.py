@@ -50,6 +50,7 @@ class RewardEvents:
         self.food_eaten = 0
         self.death_dealt = 0
         self.was_killed = False
+        self.destroyed_enemy_hill = False;
 
 class AntStatus:
     '''Enum type to represent persistent ant status.'''
@@ -117,10 +118,12 @@ class AntWorld(object):
         self.turn_start_time = None
                 
         self.hill_list = {}
+        self.enemy_hills = []
 
         # Lookup tables for enemies, friendly ants, and food.
         self.enemy_dict = {}
         self.food = []
+        self.stored_food = 0
         self.dead_dict = {}
         self.ant_lookup = {}
         self.ants = []
@@ -173,7 +176,7 @@ class AntWorld(object):
         self.L.debug("World state initialized")
 
     # _updates a world state based on data from the engine/server.
-    def _update(self, data, engine_ants):
+    def _update(self, data, engine_ants=[]):
         
         # start timer
         self.turn_start_time = time.time()
@@ -184,6 +187,8 @@ class AntWorld(object):
         # Clear map of last turn's friendly ants.
         for row, col in [ant.location for ant in self.ants]:
             self.map[row][col] = LAND
+            
+        self.stored_food -= len(self.my_hills())
 
         # Clear map of last turn's enemy ants, food, and bodies.
         clear_these = (self.food + self.enemy_dict.keys() + self.dead_dict.keys())
@@ -253,8 +258,9 @@ class AntWorld(object):
                              self.dead_dict[(row, col)] = 1;
                     elif tokens[0] == 'h':
                         owner = int(tokens[3])
-                        self.hill_list[(row, col)] = owner                          
-                             
+                        self.hill_list[(row, col)] = owner
+                        if owner != MY_ANT and (row,col) not in self.enemy_hills:
+                            self.enemy_hills.append((row,col))                     
         
         if not self.stateless:
             self._track_friendlies(check_ants)
@@ -281,8 +287,12 @@ class AntWorld(object):
             ant = self.ants[loc2id[engine_ant.loc]]
             ant.previous_reward_events = RewardEvents()
             ant.previous_reward_events.food_eaten = engine_ant.food_amt
+            self.stored_food += engine_ant.food_amt
             ant.previous_reward_events.death_dealt = engine_ant.kill_amt
             ant.previous_reward_events.was_killed = (ant.status == AntStatus.DEAD)
+            ant.previous_reward_events.destroyed_enemy_hill = ant.location in enemy_hills
+            if ant.previous_reward_events.destroyed_enemy_hill:
+                enemy_hills.remove(ant.location)
 
     def time_remaining(self):
         return self.turntime - int(1000 * (time.time() - self.turn_start_time))

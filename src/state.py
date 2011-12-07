@@ -6,9 +6,6 @@ Created on Oct 1, 2011
 import math
 import worldstate
 
-from collections import defaultdict
-from copy import deepcopy
-
 class GridLookup:     
     """ Datastructure that, once created, allows the lookup of nearby points to query point in constant time.
     
@@ -95,45 +92,33 @@ class GlobalState:
         self.lookup_res = resolution
         self.visited_res = int(min(self.world.height/visited_cells, self.world.width/visited_cells))
         self.visited = {}
-        self.curr_food_locations = []
-        self.old_food_locations = []
 
         self.draw_heatmap = True
-        # persistant state to list all own hills, even if not visible anymore.
-        self.own_hills = world.my_hills()
-        self.oldNHills = -1
-        self.NHills = len(self.own_hills)
-        self.paths = defaultdict(list) # A* Paths for the ants
-        self.a_star_counter = 0 # counts the number of A* searches per turn, they have to
-                                # be limited to avoid timeouts
-
-        self.food_storage = 0 # (Hopefully correctly) Counts the amount of food we have stored in the hill.
-
+        self.stored_food = 0
+                
         self.update()
-
-    def update(self):
-        self.oldNHills = self.NHills;
-        self.NHills = len(self.own_hills)
         
+    def update(self):
         world = self.world
-
+        
+        self.stored_food = world.stored_food
         # Parse all possible points of interest
         if len(world.enemies) > GlobalState.cutoff:
             self.grid_enemy = GridLookup(world.enemies, world.height, world.width, self.lookup_res)
         else:
             self.grid_enemy = None
-
+                 
         if len(world.food) > GlobalState.cutoff:             
             self.grid_food = GridLookup(world.food, world.height, world.width, self.lookup_res)
         else:
             self.grid_food = None
-
+        
         if len(world.ants) > GlobalState.cutoff:
             ant_locs = [ant.location for ant in self.world.ants] 
             self.grid_friendly = GridLookup(ant_locs, world.height, world.width, self.lookup_res)
         else:
             self.grid_friendly = None
-
+            
         # Update visited states
         for ant in self.world.ants:
             key = self._visited_key(ant.location)
@@ -141,15 +126,7 @@ class GlobalState:
                 self.visited[key] += 1
             else:
                 self.visited[key] = 1
-
-        # Reset a*-searches for this turn
-        self.a_star_counter = 0
-
-        # Decrease food counter by amount of hills and make sure it's not negative
-        self.food_storage -= 1
-        if self.food_storage < 0:
-            self.food_storage = 0
-
+                
         # This is very important: do not import localengine at top of python file or else your code will
         # not be able to run on the competition server. 
         if self.world.engine is not None:

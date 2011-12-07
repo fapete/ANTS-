@@ -12,4 +12,4 @@ from valuebot import BOT
 
 # Run the bot.
 bot = BOT(AntWorld())
-bot._run()
+#bot._run()

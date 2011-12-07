@@ -8,7 +8,7 @@ import os.path
 from src.antsbot import AntsBot
 from src.worldstate import AIM, AntStatus
 from src.mapgen import SymmetricMap
-from src.features import FeatureExtractor, BasicFeatures, CompositingFeatures, QualifyingFeatures
+from src.features import FeatureExtractor
 from src.state import GlobalState
                
 class ValueBot(AntsBot):
@@ -20,14 +20,14 @@ class ValueBot(AntsBot):
       
     """
     
-    def __init__(self, world, load_file="valuebot.json", use_astar_cache=False):
+    def __init__(self, world, load_file="saved_bots/qbot.json"):
         """Initialize, optionally loading from file. 
         
         Note: this bot disables tracking of friendly ants in the AntWorld, 
         so that ant_id is no longer consistent between turns. This speeds up
         game speed dramatically, but means it is trickier to maintain specific ant states.
         """
-        self.use_astar_cache = use_astar_cache
+        
         AntsBot.__init__(self, world)
         self.state = None
         self.features = None
@@ -43,11 +43,6 @@ class ValueBot(AntsBot):
             self.set_features(FeatureExtractor(data['features']))
             self.set_weights(data['weights'])
             fp.close()
-        else:
-            self.set_features(CompositingFeatures(BasicFeatures(), QualifyingFeatures()))
-            self.set_weights([0 for j in range (0, self.features.num_features())])
-        
-            
     
     def save(self, filename):
         """Save features and weights to file."""
@@ -56,13 +51,6 @@ class ValueBot(AntsBot):
         data = {'features': self.features.to_dict(), 
                 'weights': self.weights }
         json.dump(data, fp)
-        fp.close()
-            
-    def save_readable(self, filename):
-        """Save features and weights to file."""
-        
-        fp = file(filename, "w")
-        fp.write(str(self))        
         fp.close()
             
     def __str__(self):
@@ -77,7 +65,6 @@ class ValueBot(AntsBot):
     def set_features(self, extractor):
         self.features = extractor
         self.world.L.debug("Setting features: %s" % str(self.features))
-        self.features.use_astar_cache = self.use_astar_cache
         
     def set_weights(self, weights):
         """Set weight vector. Note: checks that len(weights) == self.features.num_features()."""                    
@@ -149,39 +136,10 @@ class ValueBot(AntsBot):
                         ant.direction = None
                     else:
                         next_locations[nextpos] = ant.ant_id
-                        # Check if we collect food
-                        self.state.food_storage += self.collects_food(nextpos, ant.direction)
 
     def reset(self):
         self.state = None
-    
-    def collects_food(self, position, looking_towards):
-        """ Returns 1 if at position a piece of food is collected and 0 if not.
-            Only an approximation though.
-        """
-        if position in self.world.food:
-            # We'll move right onto a food, so we'll collect one
-            return 1
-        elif self.world.next_position(position, looking_towards) in self.world.food:
-            # We'll move onto a field next to food and looking to it, so we'll collect it
-            # IF there's no enemy ant doing the same. There's no way to reliably discern that,
-            # so we'll try to figure out if there's an enemy ant, that has the possibility to do
-            # that and if so under-estimate.
-            interesting_food_loc = self.world.next_position(position, looking_towards)
-            south_loc = self.world.next_position(self.world.next_position(interesting_food_loc, 's'), 's')
-            west_loc = self.world.next_position(self.world.next_position(interesting_food_loc, 'w'), 'w')
-            north_loc = self.world.next_position(self.world.next_position(interesting_food_loc, 'n'), 'n')
-            east_loc = self.world.next_position(self.world.next_position(interesting_food_loc, 'e'), 'e')
-            enemies = set(self.world.enemies) # Slight speedup, lookup in set is faster
-            if south_loc in enemies or west_loc in enemies or north_loc in enemies or east_loc in enemies:
-                # (At least) one enemy ant could move to the same food
-                return 0
-            else:
-                return 1
-        else:
-            # Not moving to food
-            return 0
-
+        
 # Set BOT variable to be compatible with rungame.py                            
 BOT = ValueBot
 
@@ -194,12 +152,12 @@ if __name__ == '__main__':
 
     # Load the bot from file
     if False:    
-        engine.AddBot(ValueBot(engine.GetWorld(), load_file="/learner/0/bot.json"))
+        engine.AddBot(ValueBot(engine.GetWorld(), load_file="saved_bots/bot_0.json"))
     else:
         # Set completely random weights
         b = ValueBot(engine.GetWorld(), load_file=None)
         engine.AddBot(b)        
-        b.set_features(BasicFeatures())
+        b.set_features(MovingTowardsFeatures())
         b.set_weights([random.uniform(-1,1) for i in range (0, b.features.num_features())])
         b.world.L.info("Randomly initialized to:" + str(b))
         

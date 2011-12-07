@@ -92,7 +92,7 @@ class BasicFeatures(FeatureExtractor):
         self.feature_names.append("Moving Towards Closest Enemy")
         self.feature_names.append("Moving Towards Closest Food")
         self.feature_names.append("Moving Towards Friendly")
-        self.feature_names.append("Moving Towards Closest Food on AStar path")
+        #self.feature_names.append("Moving Towards Closest Food on AStar path")
         #self.feature_names.append("Moving Towards Closest Enemy on AStar path")
         self.feature_names.append("Moving Towards Least Visited")
         self.feature_names.append("Moving Towards Closest own hill")
@@ -150,10 +150,10 @@ class BasicFeatures(FeatureExtractor):
         friend_loc = self.find_closest(world, loc, state.lookup_nearby_friendly(loc))
 
         # get closest hills
-        own_hill_loc = self.find_closest(world, loc, state.own_hills)
+        own_hill_loc = self.find_closest(world, loc, world.my_hills())
         if own_hill_loc is None:
             own_hill_loc = []
-        enemy_hill_loc = self.find_closest(world, loc, world.enemy_hills())
+        enemy_hill_loc = self.find_closest(world, loc, world.enemy_hills)
         if enemy_hill_loc is None:
             enemy_hill_loc = []
         next_loc = world.next_position(loc, action)
@@ -181,10 +181,10 @@ class BasicFeatures(FeatureExtractor):
             f.append(self.moving_towards(world, loc, next_loc, friend_loc, state));
         
         # Moving on aStar-path towards food
-        if food_loc is None:
-            f.append(False)
-        else:
-            f.append(self.moving_towards_on_astar(world, loc, next_loc, food_loc, state))
+#        if food_loc is None:
+#            f.append(False)
+#        else:
+#            f.append(self.moving_towards_on_astar(world, loc, next_loc, food_loc, state))
 
         # Moving on aStar-path towards an enemy
         # This is a stupid feature.
@@ -309,17 +309,13 @@ class QualifyingFeatures(FeatureExtractor):
         if food_loc != None:
             food_dist = world.manhattan_distance(loc, food_loc)
         # get closest hills
-        own_hill_loc = self.find_closest(world, loc, state.own_hills)
+        own_hill_loc = self.find_closest(world, loc, world.my_hills())
         own_hill_dist = -1
-        if own_hill_loc is None:
-            own_hill_loc = []
-        else:
+        if own_hill_loc is not None:
             own_hill_dist = world.manhattan_distance(loc,own_hill_loc)
-        enemy_hill_loc = self.find_closest(world, loc, world.enemy_hills())
+        enemy_hill_loc = self.find_closest(world, loc, world.enemy_hills)
         enemy_hill_dist = -1
-        if enemy_hill_loc is None:
-            enemy_hill_loc = []
-        else:
+        if enemy_hill_loc is not None:
             enemy_hill_dist = world.manhattan_distance(loc,enemy_hill_loc)
         
         f = []
@@ -352,9 +348,9 @@ class QualifyingFeatures(FeatureExtractor):
         # Food storage features
         # [0-9] food stored in hill.
         for i in xrange(10):
-            f.append(state.food_storage == i)
+            f.append(state.stored_food == i)
         # >=10 food in Hill
-        f.append(state.food_storage >= 10)
+        f.append(state.stored_food >= 10)
         # Distance from my hill
         if own_hill_dist != -1:
             for i in xrange(5):
