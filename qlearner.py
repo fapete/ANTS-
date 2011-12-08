@@ -69,6 +69,8 @@ class QLearnBot(ValueBot):
         for ant in self.world.ants:
             if ant.status == AntStatus.ALIVE or ant.previous_reward_events.was_killed:
                 ant.direction = self.explore_and_exploit(ant)
+                if ant.direction is None:
+                    ant.direction = 'halt'
                 
         self.avoid_collisions()
         
@@ -120,7 +122,7 @@ class QLearnBot(ValueBot):
         # step size.  it's good to make this inversely proportional to the
         # number of features, so you don't bounce out of the bowl we're trying
         # to descend via gradient descent
-        alpha = .001
+        alpha = .0001
         
         # totally greedy default value, future rewards count for nothing, do not want
         discount = 0.5

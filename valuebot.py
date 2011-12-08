@@ -53,6 +53,13 @@ class ValueBot(AntsBot):
         json.dump(data, fp)
         fp.close()
             
+    def save_readable(self, filename):
+        """Save features and weights to file."""
+        
+        fp = file(filename, "w")
+        fp.write(str(self))        
+        fp.close()
+            
     def __str__(self):
         """Print a labeled list of weight values."""
         
@@ -128,12 +135,12 @@ class ValueBot(AntsBot):
             if ant.status == AntStatus.ALIVE:
                 ant.direction = self.get_direction(ant)
                 if ant.direction == 'halt' or ant.direction == None:
-                    ant.direction = None
+                    ant.direction = 'halt'
                 else:
                     # Basic collision detection: don't land on the same square as another friendly ant.
                     nextpos = self.world.next_position(ant.location, ant.direction) 
                     if nextpos in next_locations.keys():  
-                        ant.direction = None
+                        ant.direction = 'halt'
                     else:
                         next_locations[nextpos] = ant.ant_id
 

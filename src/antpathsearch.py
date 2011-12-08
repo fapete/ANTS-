@@ -1,9 +1,9 @@
 '''
 Created on Aug 23, 2011
 
-@author: bensapp
+@author: rgormley
 '''
-from worldstate import AIM
+from src.worldstate import AIM
 from heapq import *
 import copy
 
@@ -104,12 +104,12 @@ class aStarSearch(AntPathSearch):
     def lookup(self, start, goal):
         if self.cache is None:
             return None
-	    if (start, goal) in self.cache:
-	        return self.cache[(start, goal)]
-	    if (goal, start) in self.cache:
+        if (start, goal) in self.cache:
+            return self.cache[(start, goal)]
+        if (goal, start) in self.cache:
                 return self.cache[(goal, start)]
-	    return None
-			
+        return None
+            
     def get_path(self,start,goal, max_length=100):
         if start is None or goal is None:
             return None
