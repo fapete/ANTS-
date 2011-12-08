@@ -176,8 +176,7 @@ class AntWorld(object):
         self.L.debug("World state initialized")
 
     # _updates a world state based on data from the engine/server.
-    def _update(self, data, engine_ants=[]):
-        
+    def _update(self, data, engine_ants):
         # start timer
         self.turn_start_time = time.time()
         
@@ -206,7 +205,7 @@ class AntWorld(object):
         # by the server; if an ant doesn't show up on this list, then it
         # should dead, otherwise we have no idea what happened to it.
         check_ants = {}
-
+        #elf.statless=False
         if self.stateless:
             self.ants = []
         
@@ -284,15 +283,14 @@ class AntWorld(object):
                 
         # if everything is ok, copy over synced info for learning
         for engine_ant in engine_ants:
+            if engine_ant.loc not in loc2id:
+                continue
             ant = self.ants[loc2id[engine_ant.loc]]
-            ant.previous_reward_events = RewardEvents()
-            ant.previous_reward_events.food_eaten = engine_ant.food_amt
-            self.stored_food += engine_ant.food_amt
-            ant.previous_reward_events.death_dealt = engine_ant.kill_amt
-            ant.previous_reward_events.was_killed = (ant.status == AntStatus.DEAD)
-            ant.previous_reward_events.destroyed_enemy_hill = ant.location in enemy_hills
-            if ant.previous_reward_events.destroyed_enemy_hill:
-                enemy_hills.remove(ant.location)
+            ant.previous_reward_events = engine_ant.reward
+            self.stored_food += engine_ant.reward.food_eaten
+            #ant.previous_reward_events.destroyed_enemy_hill = ant.location in enemy_hills
+            #if ant.previous_reward_events.destroyed_enemy_hill:
+            #    enemy_hills.remove(ant.location)
 
     def time_remaining(self):
         return self.turntime - int(1000 * (time.time() - self.turn_start_time))

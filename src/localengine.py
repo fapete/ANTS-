@@ -512,12 +512,12 @@ class LocalEngine:
                 msg = game.get_player_start(b) + 'ready\n'
             else:
                 msg = game.get_player_state(b) + 'go\n'
-
+            engine_ants = game.get_player_ants(bot.world.ants)
             # Send message and receive reply.
             if game.is_alive(b):
                 L.debug("Bot %d is alive" % b)
-                L.debug("Sending message to bot %d:\n%s" % (b, msg))
-                moves = bot._receive(msg)
+                L.debug("Sending message to bot %d:\n%s%s" % (b, msg, str(engine_ants)))
+                moves = bot._receive(msg, engine_ants=engine_ants)
                 L.debug("Received moves from bot %d:\n%s" % (b, '\n'.join(moves)))
                 bot_moves.append((b, moves))
 

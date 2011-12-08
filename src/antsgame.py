@@ -2,12 +2,12 @@
 from random import randrange, choice, shuffle, randint, seed, random
 from math import sqrt
 from collections import deque, defaultdict
-
+from worldstate import RewardEvents
 from fractions import Fraction
 import operator
 import string
 from game import Game
-from copy import deepcopy
+from copy import deepcopy, copy
 try:
     from sys import maxint
 except ImportError:
@@ -620,6 +620,7 @@ class Ants(Game):
         for ant in self.current_ants.values():
             row, col = ant.loc
             self.map[row][col] = LAND
+            
 
         # determine the direction that each ant moves
         #  (holding any ants that don't have orders)
@@ -646,6 +647,7 @@ class Ants(Game):
                 self.current_ants[loc] = ants[0]
             else:
                 for ant in ants:
+                    ant.reward.was_killed = True
                     self.kill_ant(ant, True)
                     colliding_ants.append(ant)
 
@@ -668,12 +670,17 @@ class Ants(Game):
         # gather food
         for f_loc in list(self.current_food.keys()):
             # find the owners of all the ants near the food
+            nearby_ants = self.nearby_ants(f_loc, self.spawnradius)
             nearby_players = set(
-                ant.owner for ant in self.nearby_ants(f_loc, self.spawnradius)
+                ant.owner for ant in nearby_ants
             )
 
             if len(nearby_players) == 1:
                 # gather food because there is only one player near the food
+                for ant in nearby_ants:
+                    if ant.reward is None:
+                        ant.reward = RewardEvents()
+                    ant.reward.food_eaten += 1./len(nearby_ants)
                 owner = nearby_players.pop()
                 self.remove_food(f_loc, owner)
             elif nearby_players:
@@ -797,6 +804,7 @@ class Ants(Game):
                 if ant.owner == hill.owner:
                     hill.last_touched = self.turn
                 elif hill.killed_by is None:
+                    ant.reward.razed_hills += 1
                     self.raze_hill(hill, ant.owner)
 
     def do_attack_damage(self):
@@ -823,11 +831,13 @@ class Ants(Game):
                     strenth = 10
                 damage_per_enemy = Fraction(strenth, len(enemies)*10)
                 for enemy in enemies:
+                    enemy.death_dealth += damage_per_enemy
                     damage[enemy] += damage_per_enemy
 
         # kill ants with at least 1 damage
         for ant in damage:
             if damage[ant] >= 1:
+                ant.reward.was_killed = True
                 self.kill_ant(ant)
 
     def do_attack_support(self):
@@ -1428,6 +1438,9 @@ class Ants(Game):
 
     def finish_turn(self):
         """ Called by engine at the end of the turn """
+        for ant in self.current_ants.values():
+            ant.reward = RewardEvents()
+        self.prev_ants = copy(self.current_ants)
         self.do_orders()
         self.do_attack()
         self.do_raze_hills()
@@ -1586,6 +1599,16 @@ class Ants(Game):
         return [None if i not in s else data[s.index(i)]
                 for i in range(max(len(data),self.num_players))]
 
+    def get_player_ants(self, bots):
+        l = []
+        for bot in bots:
+            if bot.location in self.prev_ants:
+                bot.reward = self.prev_ants[bot.location].reward
+                l.append(self.prev_ants[bot.location])
+            
+        return l
+            
+
     def get_stats(self):
         """ Get current ant counts
 
@@ -1718,7 +1741,7 @@ class Ant:
     def __init__(self, loc, owner, spawn_turn=None):
         self.loc = loc
         self.owner = owner
-
+        self.reward = RewardEvents()
         self.initial_loc = loc
         self.spawn_turn = spawn_turn
         self.die_turn = None

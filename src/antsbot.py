@@ -14,6 +14,7 @@ from worldstate import Ant, AntStatus, AntWorld
 class AntsBot(object):
     def __init__(self, world):
         self.world = world
+        self.engine_ants = []
 
     def do_turn(self):
         '''Template for logic that must be filled in by the child bot.'''
@@ -22,7 +23,7 @@ class AntsBot(object):
     def reset(self):
         pass    
 
-    def _receive(self, msg):
+    def _receive(self, msg, engine_ants=None):
         '''Parses message from the server/engine and returns output.'''
         lines = msg.splitlines()
         if lines[-1].lower() == 'ready':
@@ -30,7 +31,7 @@ class AntsBot(object):
             return self.world._finish_turn()
 
         elif lines[-1].lower() == 'go':
-            self.world._update('\n'.join(lines[:-1]))
+            self.world._update('\n'.join(lines[:-1]), self.engine_ants if engine_ants is None else engine_ants)
             self.do_turn()
             return self.world._finish_turn()
         
@@ -51,7 +52,7 @@ class AntsBot(object):
                     
                 elif current_line.lower() == 'go':
                     
-                    self.world._update(map_data)
+                    self.world._update(map_data, self.engine_ants)
                     self.do_turn()
                     self.world._finish_turn()
                     map_data = ''

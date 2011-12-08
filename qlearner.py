@@ -17,6 +17,7 @@ class QLearnBot(ValueBot):
         self.nturns = 0
         self.percentSeen = 0
         self.lastPercentSeen = 0
+        self.world.stateless = False
     
     def get_reward(self,reward_state):
         """ 
@@ -26,13 +27,20 @@ class QLearnBot(ValueBot):
             reward_state.was_killed: boolean flag whether the ant died this turn
             reward_state.death_dealt: Fraction of responsibility this ant contributed to killing other ants (e.g., if 2 ants killed an enemy an, each would have death_dealt=1/2
         """
-        reward = 2*(self.percentSeen-self.lastPercentSeen)
+        reward = 0
+        if reward_state.death_dealt == 0\
+        and reward_state.was_killed is False\
+        and reward_state.food_eaten ==0:
+            return -.001
+        #reward = 2*(self.percentSeen-self.lastPercentSeen)
         if reward_state.death_dealt > 0:
             reward += 1./reward_state.death_dealt
         reward += 5*reward_state.food_eaten-reward_state.was_killed
         reward += 100*reward_state.destroyed_enemy_hill
-        if reward == 0:
+        if abs(reward) < 0.001:
             reward = -.001
+        else:
+            print 'hi'
         return reward
     
     def avoid_collisions(self):
@@ -172,8 +180,8 @@ if __name__ == '__main__':
     game_number = int(sys.argv[1])
     
 #    PLAY_TYPE = 'step'
-    PLAY_TYPE = 'batch'
-#    PLAY_TYPE = 'play'
+#    PLAY_TYPE = 'batch'
+    PLAY_TYPE = 'play'
 
     # Run the local debugger
     engine = LocalEngine(game=None, run_mode=PLAY_TYPE)
