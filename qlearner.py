@@ -36,11 +36,8 @@ class QLearnBot(ValueBot):
         if reward_state.death_dealt > 0:
             reward += 1./reward_state.death_dealt
         reward += 5*reward_state.food_eaten-reward_state.was_killed
-        reward += 100*reward_state.destroyed_enemy_hill
-        if abs(reward) < 0.001:
-            reward = -.001
-        else:
-            print 'hi'
+        reward += 100*reward_state.razed_hills
+
         return reward
     
     def avoid_collisions(self):
