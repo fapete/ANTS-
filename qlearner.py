@@ -180,8 +180,8 @@ if __name__ == '__main__':
     game_number = int(sys.argv[1])
     
 #    PLAY_TYPE = 'step'
-#    PLAY_TYPE = 'batch'
-    PLAY_TYPE = 'play'
+    PLAY_TYPE = 'batch'
+#    PLAY_TYPE = 'play'
 
     # Run the local debugger
     engine = LocalEngine(game=None, run_mode=PLAY_TYPE)

@@ -347,8 +347,10 @@ class QualifyingFeatures(FeatureExtractor):
         
         # Food storage features
         # [0-9] food stored in hill.
+        if state.stored_food > 0:
+            print 'ello'
         for i in xrange(10):
-            f.append(state.stored_food == i)
+            f.append(abs(state.stored_food - i) < 0.4)
         # >=10 food in Hill
         f.append(state.stored_food >= 10)
         # Distance from my hill

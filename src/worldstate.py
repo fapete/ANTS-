@@ -50,6 +50,7 @@ class RewardEvents:
         self.food_eaten = 0
         self.death_dealt = 0
         self.was_killed = False
+        self.razed_hills = 0
         self.destroyed_enemy_hill = False;
 
 class AntStatus:
