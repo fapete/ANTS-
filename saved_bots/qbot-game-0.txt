@@ -1,15 +1,15 @@
 ValueBot:
-	Moving Towards Closest Enemy = -5.73002e-07
-	Moving Towards Closest Food = -1.46414e-06
-	Moving Towards Friendly = 0
-	Moving Towards Least Visited = -2.29016e-06
-	Moving Towards Closest own hill = -1.46414e-06
-	Moving Towards Closest enemy hill = -1.46414e-06
-	Moving Towards Closest Enemy AND Enemy Nearby = 0
-	Moving Towards Closest Enemy AND Friend Nearby = 0
-	Moving Towards Closest Enemy AND Friend close = 0
+	Moving Towards Closest Enemy = 0.000290538
+	Moving Towards Closest Food = 0.00541656
+	Moving Towards Friendly = 0.00120189
+	Moving Towards Least Visited = 0.00227027
+	Moving Towards Closest own hill = 0.00541656
+	Moving Towards Closest enemy hill = 0.00541656
+	Moving Towards Closest Enemy AND Enemy Nearby = 0.000723026
+	Moving Towards Closest Enemy AND Friend Nearby = 0.00060653
+	Moving Towards Closest Enemy AND Friend close = 7.99487e-05
 	Moving Towards Closest Enemy AND More than 100 ants = 0
-	Moving Towards Closest Enemy AND Enemy is nearer to nearest food = 0
+	Moving Towards Closest Enemy AND Enemy is nearer to nearest food = -0.00134661
 	Moving Towards Closest Enemy AND No food in Hill = 0
 	Moving Towards Closest Enemy AND 1 food in Hill = 0
 	Moving Towards Closest Enemy AND 2 food in Hill = 0
@@ -21,27 +21,27 @@ ValueBot:
 	Moving Towards Closest Enemy AND 8 food in Hill = 0
 	Moving Towards Closest Enemy AND 9 food in Hill = 0
 	Moving Towards Closest Enemy AND >=10 food in Hill = 0
-	Moving Towards Closest Enemy AND 4 Squares from My Hill = -1.03684e-06
-	Moving Towards Closest Enemy AND 3 Squares from My Hill = -1.03684e-06
-	Moving Towards Closest Enemy AND 2 Squares from My Hill = -1.03684e-06
-	Moving Towards Closest Enemy AND 1 Squares from My Hill = -1.03684e-06
-	Moving Towards Closest Enemy AND >=5 Squares from My Hill = -1.03684e-06
-	Moving Towards Closest Enemy AND On Top Of My Hill = 0
-	Moving Towards Closest Enemy AND 4 Squares from Enemy Hill = 0
-	Moving Towards Closest Enemy AND 3 Squares from Enemy Hill = 0
-	Moving Towards Closest Enemy AND 2 Squares from Enemy Hill = 0
-	Moving Towards Closest Enemy AND 1 Squares from Enemy Hill = 0
-	Moving Towards Closest Enemy AND >=5 Squares from Enemy Hill = 0
-	Moving Towards Closest Enemy AND 4 Squares from Food = -2.87311e-06
-	Moving Towards Closest Enemy AND 3 Squares from Food = -2.87311e-06
-	Moving Towards Closest Enemy AND 2 Squares from Food = -2.87311e-06
-	Moving Towards Closest Enemy AND 1 Squares from Food = -2.87311e-06
-	Moving Towards Closest Enemy AND >=5 Squares from Food = -2.93958e-07
-	Moving Towards Closest Food AND Enemy Nearby = -8.74577e-08
-	Moving Towards Closest Food AND Friend Nearby = 0
-	Moving Towards Closest Food AND Friend close = 0
+	Moving Towards Closest Enemy AND 4 Squares from My Hill = 0.00931554
+	Moving Towards Closest Enemy AND 3 Squares from My Hill = 0.00931554
+	Moving Towards Closest Enemy AND 2 Squares from My Hill = 0.00931554
+	Moving Towards Closest Enemy AND 1 Squares from My Hill = 0.00931554
+	Moving Towards Closest Enemy AND >=5 Squares from My Hill = 0.00931554
+	Moving Towards Closest Enemy AND On Top Of My Hill = 0.00116268
+	Moving Towards Closest Enemy AND 4 Squares from Enemy Hill = -0.000976563
+	Moving Towards Closest Enemy AND 3 Squares from Enemy Hill = -0.000976563
+	Moving Towards Closest Enemy AND 2 Squares from Enemy Hill = -0.000976563
+	Moving Towards Closest Enemy AND 1 Squares from Enemy Hill = -0.000976563
+	Moving Towards Closest Enemy AND >=5 Squares from Enemy Hill = 0.00028114
+	Moving Towards Closest Enemy AND 4 Squares from Food = -0.0149057
+	Moving Towards Closest Enemy AND 3 Squares from Food = -0.0149057
+	Moving Towards Closest Enemy AND 2 Squares from Food = -0.0149057
+	Moving Towards Closest Enemy AND 1 Squares from Food = -0.0149057
+	Moving Towards Closest Enemy AND >=5 Squares from Food = -0.00185098
+	Moving Towards Closest Food AND Enemy Nearby = 0.0007515
+	Moving Towards Closest Food AND Friend Nearby = 0.00382008
+	Moving Towards Closest Food AND Friend close = 0.000896154
 	Moving Towards Closest Food AND More than 100 ants = 0
-	Moving Towards Closest Food AND Enemy is nearer to nearest food = 0
+	Moving Towards Closest Food AND Enemy is nearer to nearest food = -0.00202164
 	Moving Towards Closest Food AND No food in Hill = 0
 	Moving Towards Closest Food AND 1 food in Hill = 0
 	Moving Towards Closest Food AND 2 food in Hill = 0
@@ -53,27 +53,27 @@ ValueBot:
 	Moving Towards Closest Food AND 8 food in Hill = 0
 	Moving Towards Closest Food AND 9 food in Hill = 0
 	Moving Towards Closest Food AND >=10 food in Hill = 0
-	Moving Towards Closest Food AND 4 Squares from My Hill = -2.52667e-06
-	Moving Towards Closest Food AND 3 Squares from My Hill = -2.52667e-06
-	Moving Towards Closest Food AND 2 Squares from My Hill = -2.52667e-06
-	Moving Towards Closest Food AND 1 Squares from My Hill = -2.52667e-06
-	Moving Towards Closest Food AND >=5 Squares from My Hill = -2.52667e-06
-	Moving Towards Closest Food AND On Top Of My Hill = 0
-	Moving Towards Closest Food AND 4 Squares from Enemy Hill = 0
-	Moving Towards Closest Food AND 3 Squares from Enemy Hill = 0
-	Moving Towards Closest Food AND 2 Squares from Enemy Hill = 0
-	Moving Towards Closest Food AND 1 Squares from Enemy Hill = 0
-	Moving Towards Closest Food AND >=5 Squares from Enemy Hill = 0
-	Moving Towards Closest Food AND 4 Squares from Food = -7.64904e-06
-	Moving Towards Closest Food AND 3 Squares from Food = -7.64904e-06
-	Moving Towards Closest Food AND 2 Squares from Food = -7.64904e-06
-	Moving Towards Closest Food AND 1 Squares from Food = -7.64904e-06
-	Moving Towards Closest Food AND >=5 Squares from Food = -9.28649e-07
-	Moving Towards Friendly AND Enemy Nearby = 0
-	Moving Towards Friendly AND Friend Nearby = 0
-	Moving Towards Friendly AND Friend close = 0
+	Moving Towards Closest Food AND 4 Squares from My Hill = 0.0364816
+	Moving Towards Closest Food AND 3 Squares from My Hill = 0.0364816
+	Moving Towards Closest Food AND 2 Squares from My Hill = 0.0364816
+	Moving Towards Closest Food AND 1 Squares from My Hill = 0.0364816
+	Moving Towards Closest Food AND >=5 Squares from My Hill = 0.0364816
+	Moving Towards Closest Food AND On Top Of My Hill = 0.00505634
+	Moving Towards Closest Food AND 4 Squares from Enemy Hill = 0.0437176
+	Moving Towards Closest Food AND 3 Squares from Enemy Hill = 0.0437176
+	Moving Towards Closest Food AND 2 Squares from Enemy Hill = 0.0437176
+	Moving Towards Closest Food AND 1 Squares from Enemy Hill = 0.0437176
+	Moving Towards Closest Food AND >=5 Squares from Enemy Hill = 0.00208902
+	Moving Towards Closest Food AND 4 Squares from Food = -0.0635394
+	Moving Towards Closest Food AND 3 Squares from Food = -0.0635394
+	Moving Towards Closest Food AND 2 Squares from Food = -0.0635394
+	Moving Towards Closest Food AND 1 Squares from Food = -0.0635394
+	Moving Towards Closest Food AND >=5 Squares from Food = -0.008407
+	Moving Towards Friendly AND Enemy Nearby = -8.30784e-06
+	Moving Towards Friendly AND Friend Nearby = 0.00113493
+	Moving Towards Friendly AND Friend close = 3.22624e-05
 	Moving Towards Friendly AND More than 100 ants = 0
-	Moving Towards Friendly AND Enemy is nearer to nearest food = 0
+	Moving Towards Friendly AND Enemy is nearer to nearest food = -0.000217965
 	Moving Towards Friendly AND No food in Hill = 0
 	Moving Towards Friendly AND 1 food in Hill = 0
 	Moving Towards Friendly AND 2 food in Hill = 0
@@ -85,28 +85,28 @@ ValueBot:
 	Moving Towards Friendly AND 8 food in Hill = 0
 	Moving Towards Friendly AND 9 food in Hill = 0
 	Moving Towards Friendly AND >=10 food in Hill = 0
-	Moving Towards Friendly AND 4 Squares from My Hill = 0
-	Moving Towards Friendly AND 3 Squares from My Hill = 0
-	Moving Towards Friendly AND 2 Squares from My Hill = 0
-	Moving Towards Friendly AND 1 Squares from My Hill = 0
-	Moving Towards Friendly AND >=5 Squares from My Hill = 0
-	Moving Towards Friendly AND On Top Of My Hill = 0
-	Moving Towards Friendly AND 4 Squares from Enemy Hill = 0
-	Moving Towards Friendly AND 3 Squares from Enemy Hill = 0
-	Moving Towards Friendly AND 2 Squares from Enemy Hill = 0
-	Moving Towards Friendly AND 1 Squares from Enemy Hill = 0
-	Moving Towards Friendly AND >=5 Squares from Enemy Hill = 0
-	Moving Towards Friendly AND 4 Squares from Food = 0
-	Moving Towards Friendly AND 3 Squares from Food = 0
-	Moving Towards Friendly AND 2 Squares from Food = 0
-	Moving Towards Friendly AND 1 Squares from Food = 0
-	Moving Towards Friendly AND >=5 Squares from Food = 0
-	Moving Towards Least Visited AND Enemy Nearby = -1.93042e-07
-	Moving Towards Least Visited AND Friend Nearby = 0
-	Moving Towards Least Visited AND Friend close = 0
+	Moving Towards Friendly AND 4 Squares from My Hill = 0.0104654
+	Moving Towards Friendly AND 3 Squares from My Hill = 0.0104654
+	Moving Towards Friendly AND 2 Squares from My Hill = 0.0104654
+	Moving Towards Friendly AND 1 Squares from My Hill = 0.0104654
+	Moving Towards Friendly AND >=5 Squares from My Hill = 0.0104654
+	Moving Towards Friendly AND On Top Of My Hill = 0.0008454
+	Moving Towards Friendly AND 4 Squares from Enemy Hill = 0.00571439
+	Moving Towards Friendly AND 3 Squares from Enemy Hill = 0.00571439
+	Moving Towards Friendly AND 2 Squares from Enemy Hill = 0.00571439
+	Moving Towards Friendly AND 1 Squares from Enemy Hill = 0.00571439
+	Moving Towards Friendly AND >=5 Squares from Enemy Hill = 0.000463061
+	Moving Towards Friendly AND 4 Squares from Food = -0.00868068
+	Moving Towards Friendly AND 3 Squares from Food = -0.00868068
+	Moving Towards Friendly AND 2 Squares from Food = -0.00868068
+	Moving Towards Friendly AND 1 Squares from Food = -0.00868068
+	Moving Towards Friendly AND >=5 Squares from Food = -0.00123262
+	Moving Towards Least Visited AND Enemy Nearby = 0.000615717
+	Moving Towards Least Visited AND Friend Nearby = 0.000832121
+	Moving Towards Least Visited AND Friend close = -7.5934e-05
 	Moving Towards Least Visited AND More than 100 ants = 0
-	Moving Towards Least Visited AND Enemy is nearer to nearest food = 0
-	Moving Towards Least Visited AND No food in Hill = -1.9984e-07
+	Moving Towards Least Visited AND Enemy is nearer to nearest food = -0.000721137
+	Moving Towards Least Visited AND No food in Hill = -1.99945e-07
 	Moving Towards Least Visited AND 1 food in Hill = 0
 	Moving Towards Least Visited AND 2 food in Hill = 0
 	Moving Towards Least Visited AND 3 food in Hill = 0
@@ -117,27 +117,27 @@ ValueBot:
 	Moving Towards Least Visited AND 8 food in Hill = 0
 	Moving Towards Least Visited AND 9 food in Hill = 0
 	Moving Towards Least Visited AND >=10 food in Hill = 0
-	Moving Towards Least Visited AND 4 Squares from My Hill = -3.49577e-06
-	Moving Towards Least Visited AND 3 Squares from My Hill = -3.49577e-06
-	Moving Towards Least Visited AND 2 Squares from My Hill = -3.49577e-06
-	Moving Towards Least Visited AND 1 Squares from My Hill = -3.49577e-06
-	Moving Towards Least Visited AND >=5 Squares from My Hill = -3.49577e-06
-	Moving Towards Least Visited AND On Top Of My Hill = 0
-	Moving Towards Least Visited AND 4 Squares from Enemy Hill = 0
-	Moving Towards Least Visited AND 3 Squares from Enemy Hill = 0
-	Moving Towards Least Visited AND 2 Squares from Enemy Hill = 0
-	Moving Towards Least Visited AND 1 Squares from Enemy Hill = 0
-	Moving Towards Least Visited AND >=5 Squares from Enemy Hill = 0
-	Moving Towards Least Visited AND 4 Squares from Food = -1.32054e-05
-	Moving Towards Least Visited AND 3 Squares from Food = -1.32054e-05
-	Moving Towards Least Visited AND 2 Squares from Food = -1.32054e-05
-	Moving Towards Least Visited AND 1 Squares from Food = -1.32054e-05
-	Moving Towards Least Visited AND >=5 Squares from Food = -1.91292e-06
-	Moving Towards Closest own hill AND Enemy Nearby = -8.74577e-08
-	Moving Towards Closest own hill AND Friend Nearby = 0
-	Moving Towards Closest own hill AND Friend close = 0
+	Moving Towards Least Visited AND 4 Squares from My Hill = 0.0131922
+	Moving Towards Least Visited AND 3 Squares from My Hill = 0.0131922
+	Moving Towards Least Visited AND 2 Squares from My Hill = 0.0131922
+	Moving Towards Least Visited AND 1 Squares from My Hill = 0.0131922
+	Moving Towards Least Visited AND >=5 Squares from My Hill = 0.0131922
+	Moving Towards Least Visited AND On Top Of My Hill = 0.00208807
+	Moving Towards Least Visited AND 4 Squares from Enemy Hill = -0.00669521
+	Moving Towards Least Visited AND 3 Squares from Enemy Hill = -0.00669521
+	Moving Towards Least Visited AND 2 Squares from Enemy Hill = -0.00669521
+	Moving Towards Least Visited AND 1 Squares from Enemy Hill = -0.00669521
+	Moving Towards Least Visited AND >=5 Squares from Enemy Hill = -0.000184317
+	Moving Towards Least Visited AND 4 Squares from Food = -0.0198166
+	Moving Towards Least Visited AND 3 Squares from Food = -0.0198166
+	Moving Towards Least Visited AND 2 Squares from Food = -0.0198166
+	Moving Towards Least Visited AND 1 Squares from Food = -0.0198166
+	Moving Towards Least Visited AND >=5 Squares from Food = -0.00326903
+	Moving Towards Closest own hill AND Enemy Nearby = 0.0007515
+	Moving Towards Closest own hill AND Friend Nearby = 0.00382008
+	Moving Towards Closest own hill AND Friend close = 0.000896154
 	Moving Towards Closest own hill AND More than 100 ants = 0
-	Moving Towards Closest own hill AND Enemy is nearer to nearest food = 0
+	Moving Towards Closest own hill AND Enemy is nearer to nearest food = -0.00202164
 	Moving Towards Closest own hill AND No food in Hill = 0
 	Moving Towards Closest own hill AND 1 food in Hill = 0
 	Moving Towards Closest own hill AND 2 food in Hill = 0
@@ -149,27 +149,27 @@ ValueBot:
 	Moving Towards Closest own hill AND 8 food in Hill = 0
 	Moving Towards Closest own hill AND 9 food in Hill = 0
 	Moving Towards Closest own hill AND >=10 food in Hill = 0
-	Moving Towards Closest own hill AND 4 Squares from My Hill = -2.52667e-06
-	Moving Towards Closest own hill AND 3 Squares from My Hill = -2.52667e-06
-	Moving Towards Closest own hill AND 2 Squares from My Hill = -2.52667e-06
-	Moving Towards Closest own hill AND 1 Squares from My Hill = -2.52667e-06
-	Moving Towards Closest own hill AND >=5 Squares from My Hill = -2.52667e-06
-	Moving Towards Closest own hill AND On Top Of My Hill = 0
-	Moving Towards Closest own hill AND 4 Squares from Enemy Hill = 0
-	Moving Towards Closest own hill AND 3 Squares from Enemy Hill = 0
-	Moving Towards Closest own hill AND 2 Squares from Enemy Hill = 0
-	Moving Towards Closest own hill AND 1 Squares from Enemy Hill = 0
-	Moving Towards Closest own hill AND >=5 Squares from Enemy Hill = 0
-	Moving Towards Closest own hill AND 4 Squares from Food = -7.64904e-06
-	Moving Towards Closest own hill AND 3 Squares from Food = -7.64904e-06
-	Moving Towards Closest own hill AND 2 Squares from Food = -7.64904e-06
-	Moving Towards Closest own hill AND 1 Squares from Food = -7.64904e-06
-	Moving Towards Closest own hill AND >=5 Squares from Food = -9.28649e-07
-	Moving Towards Closest enemy hill AND Enemy Nearby = -8.74577e-08
-	Moving Towards Closest enemy hill AND Friend Nearby = 0
-	Moving Towards Closest enemy hill AND Friend close = 0
+	Moving Towards Closest own hill AND 4 Squares from My Hill = 0.0364816
+	Moving Towards Closest own hill AND 3 Squares from My Hill = 0.0364816
+	Moving Towards Closest own hill AND 2 Squares from My Hill = 0.0364816
+	Moving Towards Closest own hill AND 1 Squares from My Hill = 0.0364816
+	Moving Towards Closest own hill AND >=5 Squares from My Hill = 0.0364816
+	Moving Towards Closest own hill AND On Top Of My Hill = 0.00505634
+	Moving Towards Closest own hill AND 4 Squares from Enemy Hill = 0.0437176
+	Moving Towards Closest own hill AND 3 Squares from Enemy Hill = 0.0437176
+	Moving Towards Closest own hill AND 2 Squares from Enemy Hill = 0.0437176
+	Moving Towards Closest own hill AND 1 Squares from Enemy Hill = 0.0437176
+	Moving Towards Closest own hill AND >=5 Squares from Enemy Hill = 0.00208902
+	Moving Towards Closest own hill AND 4 Squares from Food = -0.0635394
+	Moving Towards Closest own hill AND 3 Squares from Food = -0.0635394
+	Moving Towards Closest own hill AND 2 Squares from Food = -0.0635394
+	Moving Towards Closest own hill AND 1 Squares from Food = -0.0635394
+	Moving Towards Closest own hill AND >=5 Squares from Food = -0.008407
+	Moving Towards Closest enemy hill AND Enemy Nearby = 0.0007515
+	Moving Towards Closest enemy hill AND Friend Nearby = 0.00382008
+	Moving Towards Closest enemy hill AND Friend close = 0.000896154
 	Moving Towards Closest enemy hill AND More than 100 ants = 0
-	Moving Towards Closest enemy hill AND Enemy is nearer to nearest food = 0
+	Moving Towards Closest enemy hill AND Enemy is nearer to nearest food = -0.00202164
 	Moving Towards Closest enemy hill AND No food in Hill = 0
 	Moving Towards Closest enemy hill AND 1 food in Hill = 0
 	Moving Towards Closest enemy hill AND 2 food in Hill = 0
@@ -181,19 +181,19 @@ ValueBot:
 	Moving Towards Closest enemy hill AND 8 food in Hill = 0
 	Moving Towards Closest enemy hill AND 9 food in Hill = 0
 	Moving Towards Closest enemy hill AND >=10 food in Hill = 0
-	Moving Towards Closest enemy hill AND 4 Squares from My Hill = -2.52667e-06
-	Moving Towards Closest enemy hill AND 3 Squares from My Hill = -2.52667e-06
-	Moving Towards Closest enemy hill AND 2 Squares from My Hill = -2.52667e-06
-	Moving Towards Closest enemy hill AND 1 Squares from My Hill = -2.52667e-06
-	Moving Towards Closest enemy hill AND >=5 Squares from My Hill = -2.52667e-06
-	Moving Towards Closest enemy hill AND On Top Of My Hill = 0
-	Moving Towards Closest enemy hill AND 4 Squares from Enemy Hill = 0
-	Moving Towards Closest enemy hill AND 3 Squares from Enemy Hill = 0
-	Moving Towards Closest enemy hill AND 2 Squares from Enemy Hill = 0
-	Moving Towards Closest enemy hill AND 1 Squares from Enemy Hill = 0
-	Moving Towards Closest enemy hill AND >=5 Squares from Enemy Hill = 0
-	Moving Towards Closest enemy hill AND 4 Squares from Food = -7.64904e-06
-	Moving Towards Closest enemy hill AND 3 Squares from Food = -7.64904e-06
-	Moving Towards Closest enemy hill AND 2 Squares from Food = -7.64904e-06
-	Moving Towards Closest enemy hill AND 1 Squares from Food = -7.64904e-06
-	Moving Towards Closest enemy hill AND >=5 Squares from Food = -9.28649e-07
+	Moving Towards Closest enemy hill AND 4 Squares from My Hill = 0.0364816
+	Moving Towards Closest enemy hill AND 3 Squares from My Hill = 0.0364816
+	Moving Towards Closest enemy hill AND 2 Squares from My Hill = 0.0364816
+	Moving Towards Closest enemy hill AND 1 Squares from My Hill = 0.0364816
+	Moving Towards Closest enemy hill AND >=5 Squares from My Hill = 0.0364816
+	Moving Towards Closest enemy hill AND On Top Of My Hill = 0.00505634
+	Moving Towards Closest enemy hill AND 4 Squares from Enemy Hill = 0.0437176
+	Moving Towards Closest enemy hill AND 3 Squares from Enemy Hill = 0.0437176
+	Moving Towards Closest enemy hill AND 2 Squares from Enemy Hill = 0.0437176
+	Moving Towards Closest enemy hill AND 1 Squares from Enemy Hill = 0.0437176
+	Moving Towards Closest enemy hill AND >=5 Squares from Enemy Hill = 0.00208902
+	Moving Towards Closest enemy hill AND 4 Squares from Food = -0.0635394
+	Moving Towards Closest enemy hill AND 3 Squares from Food = -0.0635394
+	Moving Towards Closest enemy hill AND 2 Squares from Food = -0.0635394
+	Moving Towards Closest enemy hill AND 1 Squares from Food = -0.0635394
+	Moving Towards Closest enemy hill AND >=5 Squares from Food = -0.008407

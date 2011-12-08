@@ -135,12 +135,12 @@ class ValueBot(AntsBot):
             if ant.status == AntStatus.ALIVE:
                 ant.direction = self.get_direction(ant)
                 if ant.direction == 'halt' or ant.direction == None:
-                    ant.direction = 'halt'
+                    ant.direction = None
                 else:
                     # Basic collision detection: don't land on the same square as another friendly ant.
                     nextpos = self.world.next_position(ant.location, ant.direction) 
                     if nextpos in next_locations.keys():  
-                        ant.direction = 'halt'
+                        ant.direction = None
                     else:
                         next_locations[nextpos] = ant.ant_id
 

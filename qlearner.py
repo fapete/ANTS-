@@ -77,8 +77,8 @@ class QLearnBot(ValueBot):
         for ant in self.world.ants:
             if ant.status == AntStatus.ALIVE or ant.previous_reward_events.was_killed:
                 ant.direction = self.explore_and_exploit(ant)
-                if ant.direction is None:
-                    ant.direction = 'halt'
+                if ant.direction is None or ant.direction is 'halt':
+                    ant.direction = None
                 
         self.avoid_collisions()
         
