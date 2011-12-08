@@ -8,7 +8,7 @@ import os.path
 from src.antsbot import AntsBot
 from src.worldstate import AIM, AntStatus
 from src.mapgen import SymmetricMap
-from src.features import FeatureExtractor
+from src.features import *
 from src.state import GlobalState
                
 class ValueBot(AntsBot):
@@ -20,7 +20,7 @@ class ValueBot(AntsBot):
       
     """
     
-    def __init__(self, world, load_file="saved_bots/qbot.json"):
+    def __init__(self, world, load_file="saved_bots/qbot1.json"):
         """Initialize, optionally loading from file. 
         
         Note: this bot disables tracking of friendly ants in the AntWorld, 
@@ -59,6 +59,19 @@ class ValueBot(AntsBot):
         fp = file(filename, "w")
         fp.write(str(self))        
         fp.close()
+        
+    def load_readable(self, filename):
+        """Save features and weights to file."""
+        
+        fp = open(filename, "r")
+        fp.readline()
+        weights = []
+        self.set_features(CompositingFeatures(BasicFeatures(), QualifyingFeatures()))
+        for l in fp.readlines():
+            weights.append((float)(l.split(' ')[-1]))
+        self.set_weights(weights)
+        #fp.write(str(self))        
+        #fp.close()
             
     def __str__(self):
         """Print a labeled list of weight values."""
@@ -88,6 +101,9 @@ class ValueBot(AntsBot):
         
         self.world.L.info("Evaluating move: %s, %s:" % (str(loc), action))
         dot_product = 0
+        next_loc = self.world.next_position(loc, action)
+        if next_loc in self.world.enemy_hills:
+            return float("inf")
         for i in range(0, len(feature_vector)):
             if feature_vector[i]:
                 self.world.L.info("\tf: %s = %g" % (self.features.feature_name(i), self.weights[i]))
@@ -151,11 +167,17 @@ class ValueBot(AntsBot):
 BOT = ValueBot
 
 if __name__ == '__main__':
+    
     from src.localengine import LocalEngine
     from greedybot import GreedyBot
     import sys
-    
-    engine = LocalEngine()
+    bot = ValueBot(LocalEngine().GetWorld())
+    for game in xrange(5):
+        bot.load_readable('saved_bots/qbot1-game-' + str(game) + '.txt')
+        bot.save('saved_bots/qbot1-game-' + str(game) + '.json')
+        bot.load_readable('saved_bots/qbot2-game-' + str(game) + '.txt')
+        bot.save('saved_bots/qbot2-game-' + str(game) + '.json')
+    '''engine = LocalEngine()
 
     # Load the bot from file
     if False:    
@@ -179,6 +201,6 @@ if __name__ == '__main__':
     fp.close()
     
     # Run the local debugger
-    engine.Run(sys.argv + ["--run", "-m", "src/maps/2player/my_random.map"])
+    engine.Run(sys.argv + ["--run", "-m", "src/maps/2player/my_random.map"])'''
 
     

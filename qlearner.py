@@ -32,10 +32,10 @@ class QLearnBot(ValueBot):
         and reward_state.was_killed is False\
         and reward_state.food_eaten ==0:
             return -.001
-        #reward = 2*(self.percentSeen-self.lastPercentSeen)
+        #reward = .1*(self.percentSeen-self.lastPercentSeen)
         if reward_state.death_dealt > 0:
             reward += 1./reward_state.death_dealt
-        reward += 5*reward_state.food_eaten-reward_state.was_killed
+        reward += 10*reward_state.food_eaten-reward_state.was_killed
         reward += 100*reward_state.razed_hills
 
         return reward
@@ -162,6 +162,8 @@ class QLearnBot(ValueBot):
 # Set BOT variable to be compatible with rungame.py                            
 BOT = ValueBot
 
+MAX_TURNS = 300
+
 if __name__ == '__main__':
     from src.localengine import LocalEngine
     from greedybot import GreedyBot
@@ -183,29 +185,49 @@ if __name__ == '__main__':
     # Run the local debugger
     engine = LocalEngine(game=None, run_mode=PLAY_TYPE)
 
+    
+
     if game_number > 0: 
-        qbot = QLearnBot(engine.GetWorld(), load_file='saved_bots/qbot.json')
+        qbot1 = QLearnBot(engine.GetWorld(), load_file='saved_bots/qbot1.json')
+        qbot2 = QLearnBot(engine.GetWorld(), load_file='saved_bots/qbot2.json')
     else:
         # init qbot with weights 0
-        qbot = QLearnBot(engine.GetWorld(), load_file=None)
-        qbot.set_features(CompositingFeatures(BasicFeatures(), QualifyingFeatures()))
-        qbot.set_weights([0 for j in range (0, qbot.features.num_features())])
-        
-    # Generate and play on random 30 x 30 map
+        qbot1 = QLearnBot(engine.GetWorld(), load_file=None)
+        qbot1.set_features(CompositingFeatures(BasicFeatures(), QualifyingFeatures()))
+        qbot1.set_weights([0 for j in range (0, qbot1.features.num_features())])
+        qbot2 = QLearnBot(engine.GetWorld(), load_file=None)
+        qbot2.set_features(CompositingFeatures(BasicFeatures(), QualifyingFeatures()))
+        qbot2.set_weights([0 for j in range (0, qbot2.features.num_features())])
+      
+  # Generate and play on random 30 x 30 map
     random_map = SymmetricMap(min_dim=30, max_dim=30)
     random_map.random_walk_map()
     fp = file("src/maps/2player/my_random.map", "w")
     fp.write(random_map.map_text())
     fp.close()
-        
-    # set up a game between current qbot and GreedyBot
-    engine.AddBot(qbot)        
-    engine.AddBot(GreedyBot(engine.GetWorld()))
-    qbot.ngames = game_number + 1
-    engine.Run(sys.argv + ["--run", "-m", "src/maps/2player/my_random.map"], run_mode=PLAY_TYPE)
-    qbot.save('saved_bots/qbot.json')
+    qbot1.ngames = game_number + 1
+    qbot2.ngames = game_number + 1
+    
+    if game_number % 5 == 4:
+        engine.AddBot(GreedyBot(engine.GetWorld()))        
+        engine.AddBot(qbot1)
+        engine.Run(sys.argv + ["--run", "-m", "src/maps/2player/my_random.map", "-t", str(MAX_TURNS)], run_mode=PLAY_TYPE)
+        engine = LocalEngine(game=None, run_mode=PLAY_TYPE)
+        engine.AddBot(GreedyBot(engine.GetWorld()))        
+        engine.AddBot(qbot2)
+        engine.Run(sys.argv + ["--run", "-m", "src/maps/2player/my_random.map", "-t", str(MAX_TURNS)], run_mode=PLAY_TYPE)
+        print 'done test vs greedybot'
+    else:
+        # set up a game between current qbot and GreedyBot
+        engine.AddBot(qbot1)        
+        engine.AddBot(qbot2)
+        engine.Run(sys.argv + ["--run", "-m", "src/maps/2player/my_random.map", "-t", str(MAX_TURNS)], run_mode=PLAY_TYPE)
+    
+    qbot1.save('saved_bots/qbot1-%d-1.json' % game_number)
+    qbot2.save('saved_bots/qbot2-%d-1.json' % game_number)
     # this is an easy way to look at the weights
-    qbot.save_readable('saved_bots/qbot-game-%d.txt' % game_number)
-        
+    qbot1.save_readable('saved_bots/qbot1-game-%d.txt' % game_number)
+    qbot2.save_readable('saved_bots/qbot2-game-%d.txt' % game_number)
+            
     end_time = time.time()
     print 'training done, delta time = ', end_time-start_time
