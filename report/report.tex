@@ -59,4 +59,17 @@ get there. We described our original plan for the bot, which parts worked and wh
 work. We supplied some some assumptions why these parts did not work and then detailed how we solved
 the problems in time. The report is concluded by a short evaluation of its performance, showing,
 that the bot was not terrible, even though some more tweaking would be pretty helpful.
+\section*{Analysis}
+\subsection*{Strengths}
+Our original plan showed a lot of promise. By grid searching for a reward function rather than making one by hand,
+we could ensure that the behaviors most conducive to victory would be rewarded. With more time, we'd have implemented
+a better scoring metric to make the grid searched rewards work properly.
+
+Our actual bot excelled in a few ways - it correctly learned to keep ants fairly widely spread out in order to best explore the map.
+It also did a pretty good job of avoiding unprofitable encounters with enemies.
+\subsection*{Weaknesses}
+Our bot's biggest weakness was just lack of training. We lost a ton of time to the gridsearching, so when we finally got qlearning
+off the ground, it was the night before the competition. And then our overnight training went bad while we slept, so we were forced
+to enter a severely undertrained bot into the tournament. We are convinced that with a full 50 training games under its belt, our bot could
+have been a formidable opponent.
 \end{document}
